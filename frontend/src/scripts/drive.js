@@ -8,12 +8,6 @@ let markers = [];
 let orderCodeGlobal = "";
 let rowNumberGlobal = "";
 let userIP = "";
-const CONFIG = {
-  SHEETDB_URL: "",
-  BOT_TOKEN: "",
-  DRIVERS_CHAT: "",
-  ADMIN_CHAT: "",
-};
 // Get user IP
 async function getUserIP() {
   try {
@@ -411,7 +405,7 @@ async function submitOrder() {
       throw new Error(`Backend error: ${response.status} ${txt}`);
     }
     const respData = await response.json();
-    const rowNumber = respData.row_number || respData.row_number || 1;
+    const rowNumber = respData.row_number || 1;
     rowNumberGlobal = rowNumber;
     console.log("✓ Order created via backend:", respData);
     // Show success

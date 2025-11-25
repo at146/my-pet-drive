@@ -21,15 +21,11 @@ router.post("/create-order", async (req, res) => {
     // Try to find row number (may require a short delay on SheetDB side)
     let rowNumber = null;
     try {
-      // a couple attempts with small delay to allow SheetDB to update
-      for (let i = 0; i < 5; i++) {
-        rowNumber = await findOrderRowNumber(order.order_code);
-        if (rowNumber) break;
-        await new Promise((r) => setTimeout(r, 800));
-      }
+      rowNumber = await findOrderRowNumber(order.order_code);
     } catch (err) {
       console.warn("Could not determine row number:", err);
     }
+    console.log("✓ Row number:", rowNumber);
 
     // Send Telegram notifications (client/drivers/admin)
     try {
