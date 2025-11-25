@@ -1,10 +1,10 @@
 const CONF = {
-  SHEET: "https://sheetdb.io/api/v1/6o3cza4d6vggw",
+  SHEET: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
   MERCHANT: "Petsit",
   PASS1: "ejY7rDzZWA77Lk27mLrI",
-  BOT_TOKEN: "8051112543:AAFL3Slv1q1NadBxAIq29gefPWWd5dNGh_Y",
-  ADM_CHAT: "5993771305",
-  DRV_CHAT: "-1002282040380",
+  BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
+  ADM_CHAT: "209183016",
+  DRV_CHAT: "-1001905857177",
 };
 const p = location.search.replace("?", "").split("-");
 if (p.length !== 2) {
@@ -149,7 +149,7 @@ function bidsUI() {
          Машина: ${b.car_brand || "-"}<br>
          Комментарий: ${
            b.comment || "—"
-         }<br><br> <button onclick="confirmDriver(${i})">Подтвердить</button> </div>`,
+         }<br><br> <button onclick="confirmDriver(${i})">Подтвердить</button> </div>`
       )
       .join("");
     box.classList.remove("hidden");
@@ -161,7 +161,7 @@ function driverUI() {
     payBtn = document.getElementById("pay-btn");
   if (
     ["ВОДИТЕЛЬ_НАЙДЕН", "ОЖИДАНИЕ_ОПЛАТЫ", "ОПЛАЧЕН", "УСПЕШНО"].includes(
-      order.status,
+      order.status
     )
   ) {
     el("drv-name", `${order.driver_first_name}`);
@@ -235,8 +235,8 @@ function updateMap() {
 async function geo(addr) {
   const r = await fetch(
     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      addr,
-    )}&limit=1`,
+      addr
+    )}&limit=1`
   );
   const d = await r.json();
   return [+d[0].lat, +d[0].lon];
@@ -269,7 +269,7 @@ function cancelLogicUI() {
     (e) =>
       (e.onclick = () => {
         cancelInput.value = e.textContent;
-      }),
+      })
   );
   cancelFinal.onclick = async () => {
     let reason = cancelInput.value || "";
@@ -430,9 +430,9 @@ function createPayment() {
   const url = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${
     CONF.MERCHANT
   }&OutSum=${outSum}&InvId=${invId}&Description=${encodeURIComponent(
-    desc,
+    desc
   )}&${shpParam}&Receipt=${encodeURIComponent(
-    receipt,
+    receipt
   )}&SignatureValue=${signVal}`;
   fetch(`${CONF.SHEET}/order_code/${CODE}`, {
     method: "PATCH",
