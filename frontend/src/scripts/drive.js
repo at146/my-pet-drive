@@ -10,22 +10,22 @@ let rowNumberGlobal = "";
 let userIP = "";
 const CONFIG = {
   SHEETDB_URL: "",
-  BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
-  DRIVERS_CHAT: "-1001905857177",
-  ADMIN_CHAT: "209183016",
+  BOT_TOKEN: "",
+  DRIVERS_CHAT: "",
+  ADMIN_CHAT: "",
 };
 // Get user IP
-// async function getUserIP() {
-//   try {
-//     const response = await fetch("https://api.ipify.org?format=json");
-//     const data = await response.json();
-//     userIP = data.ip;
-//   } catch (error) {
-//     console.error("IP detection error:", error);
-//     userIP = "unknown";
-//   }
-// }
-// getUserIP();
+async function getUserIP() {
+  try {
+    const response = await fetch("https://api.ipify.org?format=json");
+    const data = await response.json();
+    userIP = data.ip;
+  } catch (error) {
+    console.error("IP detection error:", error);
+    userIP = "unknown";
+  }
+}
+getUserIP();
 // Phone mask handler
 function applyPhoneMask(input) {
   let value = input.value.replace(/\D/g, "");
@@ -399,27 +399,21 @@ async function submitOrder() {
       driver_responses: "[]",
       approve: `✓ ; ${timestamp} ; ${userIP} ; ${userData.id}`,
     };
-    console.log("Sending order to SheetDB:", orderData);
-    // Send to SheetDB
-    const response = await fetch(CONFIG.SHEETDB_URL, {
+    console.log("Sending order to backend:/api/create-order", orderData);
+    // Send to backend which will store in SheetDB and notify Telegram
+    const response = await fetch(`/api/create-order`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: [orderData] }),
+      body: JSON.stringify(orderData),
     });
-    if (!response.ok) throw new Error("SheetDB error: " + response.status);
-    console.log("✓ Order created in SheetDB");
-    // Wait for row_number to be filled
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    // Get row number
-    const searchResp = await fetch(
-      `${CONFIG.SHEETDB_URL}/search?order_code=${orderCode}`,
-    );
-    const searchData = await searchResp.json();
-    const rowNumber = searchData[0]?.row_number || 1;
+    if (!response.ok) {
+      const txt = await response.text();
+      throw new Error("Backend error: " + response.status + " " + txt);
+    }
+    const respData = await response.json();
+    const rowNumber = respData.row_number || respData.row_number || 1;
     rowNumberGlobal = rowNumber;
-    console.log("✓ Row number:", rowNumber);
-    // Send Telegram notifications
-    await sendTelegramNotifications(orderData, orderCode, rowNumber);
+    console.log("✓ Order created via backend:", respData);
     // Show success
     document.getElementById("order-code-display").textContent = orderCode;
     goToStep(5);
@@ -453,8 +447,10 @@ function goToOrderPage() {
 }
 // Send Telegram Notifications
 async function sendTelegramNotifications(order, orderCode, rowNumber) {
+  // TODO: сделать на беке
   const botUrl = `https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`;
   try {
+    // TODO: сделать на беке
     // To client - теперь с ссылкой на заказ в формате /route
     const clientOrderLink = `/route?${rowNumber}-${orderCode}`;
     await fetch(botUrl, {
@@ -472,6 +468,7 @@ async function sendTelegramNotifications(order, orderCode, rowNumber) {
       }),
     });
     console.log("✓ Notification sent to client");
+    // TODO: сделать на беке
     // To drivers
     const driverLink = `https://xn--80ahcabg2akskmd2q.xn--p1ai/order?${rowNumber}-${orderCode}`;
     await fetch(botUrl, {
@@ -492,6 +489,7 @@ ${order.mssg_cl ? "\n Комментарий: " + order.mssg_cl : ""}
       }),
     });
     console.log("✓ Notification sent to drivers");
+    // TODO: сделать на беке
     // To admin
     await fetch(botUrl, {
       method: "POST",
