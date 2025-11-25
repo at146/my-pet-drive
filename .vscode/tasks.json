@@ -1,0 +1,15 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Backend (nodemon --inspect)",
+      "type": "shell",
+      "command": "npx nodemon --inspect=9229",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}
