@@ -445,69 +445,6 @@ function goToOrderPage() {
     window.location.href = `/route?${rowNumberGlobal}-${orderCodeGlobal}`;
   }
 }
-// Send Telegram Notifications
-async function sendTelegramNotifications(order, orderCode, rowNumber) {
-  // TODO: сделать на беке
-  const botUrl = `https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`;
-  try {
-    // TODO: сделать на беке
-    // To client - теперь с ссылкой на заказ в формате /route
-    const clientOrderLink = `/route?${rowNumber}-${orderCode}`;
-    await fetch(botUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: order.telegram_id,
-        text: `Ваш заказ №${orderCode} принят!
-Маршрут: ${order.departure_address} → ${order.destination_address}
-Расстояние: ${order.distance_km} км
-Дата: ${order.trip_date} в ${order.trip_time}
-Ожидайте откликов водителей в течение 15 минут.
-Ссылка на ваш заказ: https://мояпередержка.рф${clientOrderLink}`,
-        parse_mode: "HTML",
-      }),
-    });
-    console.log("✓ Notification sent to client");
-    // TODO: сделать на беке
-    // To drivers
-    const driverLink = `https://xn--80ahcabg2akskmd2q.xn--p1ai/order?${rowNumber}-${orderCode}`;
-    await fetch(botUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CONFIG.DRIVERS_CHAT,
-        text: `Новый заказ №${orderCode}
-Откуда: ${order.departure_address}
-Куда: ${order.destination_address}
-Расстояние: ${order.distance_km} км
-Животное: ${order.animal_type}, ${order.weight_kg}кг
-Дата: ${order.trip_date} в ${order.trip_time}
-Выплата: ${order.driver_cost}₽
-${order.mssg_cl ? `\n Комментарий: ${order.mssg_cl}` : ""}
-<a href="${driverLink}">Откликнуться на заказ</a>`,
-        parse_mode: "HTML",
-      }),
-    });
-    console.log("✓ Notification sent to drivers");
-    // TODO: сделать на беке
-    // To admin
-    await fetch(botUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: CONFIG.ADMIN_CHAT,
-        text: `Новый заказ №${orderCode}
-Клиент: ${order.client_name} (@${order.client_username})
-Маршрут: ${order.departure_address} → ${order.destination_address}
-Стоимость: ${order.total_cost}₽`,
-        parse_mode: "HTML",
-      }),
-    });
-    console.log("✓ Notification sent to admin");
-  } catch (error) {
-    console.error("Telegram notification error:", error);
-  }
-}
 // Generate Order Code
 function generateOrderCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
