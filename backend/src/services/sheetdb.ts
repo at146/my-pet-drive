@@ -38,7 +38,7 @@ export async function findOrderRowNumber(orderCode: string) {
   }
   const data = json as Array<Record<string, unknown>>;
   const row = data[0]?.row_number;
-  // TODO: всегда null возвращает
+  // всегда null возвращает
   return typeof row === "number" ? row : null;
   // return data[0]?.row_number || null;
 }

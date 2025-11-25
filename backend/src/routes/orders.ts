@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSheetOrder, findOrderRowNumber } from "../services/sheetdb";
+import { createSheetOrder } from "../services/sheetdb";
 import { notifyAll } from "../services/telegram";
 
 const router = Router();
@@ -10,6 +10,7 @@ const router = Router();
  */
 router.post("/create-order", async (req, res) => {
   try {
+    // TODO: сделать защиту от подмены цены клиентом
     const order = req.body;
     if (!order || !order.order_code) {
       return res.status(400).json({ error: "Invalid order payload" });
@@ -19,13 +20,14 @@ router.post("/create-order", async (req, res) => {
     await createSheetOrder(order);
 
     // Try to find row number (may require a short delay on SheetDB side)
-    let rowNumber = null;
-    try {
-      rowNumber = await findOrderRowNumber(order.order_code);
-    } catch (err) {
-      console.warn("Could not determine row number:", err);
-    }
-    console.log("✓ Row number:", rowNumber);
+    const rowNumber = 1;
+    // let rowNumber = null;
+    // try {
+    //   rowNumber = await findOrderRowNumber(order.order_code);
+    // } catch (err) {
+    //   console.warn("Could not determine row number:", err);
+    // }
+    // console.log("✓ Row number:", rowNumber);
 
     // Send Telegram notifications (client/drivers/admin)
     try {
