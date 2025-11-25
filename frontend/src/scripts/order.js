@@ -1,6 +1,4 @@
 const CONFIG = {
-  ADMIN_CHAT: "209183016",
-  DRIVERS_CHAT: "-1001905857177",
   COMMISSION_RATE: 0.21, // 21% комиссия
 };
 

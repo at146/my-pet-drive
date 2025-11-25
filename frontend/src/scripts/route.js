@@ -1,5 +1,4 @@
 const CONF = {
-  SHEETDB_URL: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
   MERCHANT: "Petsit",
   PASS1: "ejY7rDzZWA77Lk27mLrI",
   BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
@@ -20,13 +19,12 @@ let order = null,
 
 async function loadOrder() {
   try {
-    const r = await fetch(`${CONF.SHEETDB_URL}/search?order_code=${CODE}`);
-    const d = await r.json();
-    if (!d.length) {
+    const r = await fetch(`/api/orders/${CODE}`);
+    if (!r.ok) {
       alert("Заказ не найден");
       return;
     }
-    order = d[0];
+    order = await r.json();
     if (!order.status || order.status === "СОЗДАН" || order.status === "") {
       order.status = "ОЖИДАНИЕ_ОТКЛИКОВ";
     }
@@ -149,7 +147,7 @@ function bidsUI() {
          Машина: ${b.car_brand || "-"}<br>
          Комментарий: ${
            b.comment || "—"
-         }<br><br> <button onclick="confirmDriver(${i})">Подтвердить</button> </div>`
+         }<br><br> <button onclick="confirmDriver(${i})">Подтвердить</button> </div>`,
       )
       .join("");
     box.classList.remove("hidden");
@@ -161,7 +159,7 @@ function driverUI() {
     payBtn = document.getElementById("pay-btn");
   if (
     ["ВОДИТЕЛЬ_НАЙДЕН", "ОЖИДАНИЕ_ОПЛАТЫ", "ОПЛАЧЕН", "УСПЕШНО"].includes(
-      order.status
+      order.status,
     )
   ) {
     el("drv-name", `${order.driver_first_name}`);
@@ -235,8 +233,8 @@ function updateMap() {
 async function geo(addr) {
   const r = await fetch(
     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      addr
-    )}&limit=1`
+      addr,
+    )}&limit=1`,
   );
   const d = await r.json();
   return [+d[0].lat, +d[0].lon];
@@ -269,7 +267,7 @@ function cancelLogicUI() {
     (e) =>
       (e.onclick = () => {
         cancelInput.value = e.textContent;
-      })
+      }),
   );
   cancelFinal.onclick = async () => {
     let reason = cancelInput.value || "";
@@ -281,10 +279,10 @@ function cancelLogicUI() {
       status: "ОТМЕНА",
       cancel_wtf: `${reason}; ${new Date().toLocaleString("ru-RU")}`,
     };
-    await fetch(`${CONF.SHEETDB_URL}/order_code/${CODE}`, {
+    await fetch(`/api/orders/${CODE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: payload }),
+      body: JSON.stringify(payload),
     });
     await sendCancelNotif(reason);
     await loadOrder();
@@ -334,24 +332,22 @@ async function confirmDriver(i) {
   const bids = JSON.parse(order.driver_responses),
     drv = bids[i];
   try {
-    await fetch(`${CONF.SHEETDB_URL}/order_code/${CODE}`, {
+    await fetch(`/api/orders/${CODE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        data: {
-          status: "ОЖИДАНИЕ_ОПЛАТЫ",
-          driver_select: JSON.stringify(drv),
-          driver_first_name: drv.first_name,
-          driver_username: drv.username,
-          driver_bid: drv.bid,
-          driver_comment: drv.comment,
-          driver_phone: drv.phone,
-          driver_car: drv.car_brand,
-          driver_num: drv.car_num,
-          driver_color: drv.car_color,
-          driver_cost_with_com: drv.cost_with_com,
-          driver_confirmed_at: new Date().toISOString(),
-        },
+        status: "ОЖИДАНИЕ_ОПЛАТЫ",
+        driver_select: JSON.stringify(drv),
+        driver_first_name: drv.first_name,
+        driver_username: drv.username,
+        driver_bid: drv.bid,
+        driver_comment: drv.comment,
+        driver_phone: drv.phone,
+        driver_car: drv.car_brand,
+        driver_num: drv.car_num,
+        driver_color: drv.car_color,
+        driver_cost_with_com: drv.cost_with_com,
+        driver_confirmed_at: new Date().toISOString(),
       }),
     });
     await sendConfirmNotif(drv);
@@ -430,14 +426,14 @@ function createPayment() {
   const url = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${
     CONF.MERCHANT
   }&OutSum=${outSum}&InvId=${invId}&Description=${encodeURIComponent(
-    desc
+    desc,
   )}&${shpParam}&Receipt=${encodeURIComponent(
-    receipt
+    receipt,
   )}&SignatureValue=${signVal}`;
-  fetch(`${CONF.SHEETDB_URL}/order_code/${CODE}`, {
+  fetch(`/api/orders/${CODE}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: { payment_url: url } }),
+    body: JSON.stringify({ payment_url: url }),
   });
   window.open(url, "_blank");
 }
