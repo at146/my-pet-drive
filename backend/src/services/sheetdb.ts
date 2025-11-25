@@ -42,3 +42,18 @@ export async function findOrderRowNumber(orderCode: string) {
   return typeof row === "number" ? row : null;
   // return data[0]?.row_number || null;
 }
+
+export async function getOrderByCode(orderCode: string) {
+  if (!SHEETDB_URL) throw new Error("SHEETDB_URL is not configured");
+  const url = `${SHEETDB_URL}/search?order_code=${encodeURIComponent(
+    orderCode,
+  )}`;
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`SheetDB search error: ${resp.status} ${txt}`);
+  }
+  const json = await resp.json();
+  if (!Array.isArray(json) || !json.length) return null;
+  return json[0];
+}

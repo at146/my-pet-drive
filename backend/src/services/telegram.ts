@@ -67,3 +67,55 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     console.error("notifyAll error:", err);
   }
 }
+
+export async function notifyDriverResponse(
+  order: any,
+  rowNumber: number | null,
+  resp: any,
+) {
+  try {
+    const link = `https://xn--80ahcabg2akskmd2q.xn--p1ai/route?${rowNumber}-${order.order_code}`;
+
+    // Client message
+    // Для клиента: первое имя водителя, марка авто, комментарий и стоимость с комиссией 21%
+    const clientMsg =
+      `<b>Новый отклик по заказу №${order.order_code}</b>\n` +
+      `Водитель: ${resp.first_name}\n` +
+      `Марка авто: ${resp.car_brand || "—"}\n` +
+      `Комментарий: ${resp.comment || "—"}\n` +
+      `Сумма с комиссией: ${resp.cost_with_com}₽\n` +
+      `<a href="${link}">Подтвердить предложение</a>`;
+
+    await sendMessage(order.telegram_id, clientMsg);
+
+    // Admin message
+    // Для админа: полная разбивка с использованием cost_with_com
+    const adminPaying = Math.round(resp.bid * 0.105);
+    const adminFactProfit = Math.round(resp.bid * 0.105);
+
+    const adminMsg =
+      `<b>Отклик по заказу №${order.order_code}</b>\n` +
+      `Водитель: ${resp.first_name}\n` +
+      `Телефон: ${resp.phone}\n` +
+      `Марка: ${resp.car_brand}\n` +
+      `Номер: ${resp.car_num}\n` +
+      `Цвет: ${resp.car_color}\n` +
+      `Сумма предложения (драйвер): ${resp.bid}₽\n` +
+      `Стоимость с комиссией 21%: ${resp.cost_with_com}₽\n` +
+      `— Эквайринг 10,5%: ${adminPaying}₽\n` +
+      `— Факт. доход 10,5%: ${adminFactProfit}₽`;
+
+    if (ADMIN_CHAT) await sendMessage(ADMIN_CHAT, adminMsg);
+
+    // Drivers chat
+    // Для чата водителей: стандартно
+    if (DRIVERS_CHAT) {
+      await sendMessage(
+        DRIVERS_CHAT,
+        `По заказу №${order.order_code} +1 новый отклик`,
+      );
+    }
+  } catch (err) {
+    console.error("notifyDriverResponse error:", err);
+  }
+}
