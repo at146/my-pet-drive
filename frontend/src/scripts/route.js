@@ -7,8 +7,7 @@ if (p.length !== 2) {
   alert("Неверная ссылка");
   throw "";
 }
-const ROW = p[0],
-  CODE = p[1];
+const CODE = p[1];
 document.getElementById("code").textContent = CODE;
 let order = null,
   map,

@@ -4,8 +4,6 @@ const CONFIG = {
 
 let driver = null;
 let order = null;
-let rowNum = null;
-let orderCode = null;
 let map,
   markers = [];
 
@@ -22,8 +20,7 @@ async function init() {
     alert("Некорректная ссылка заказа");
     return;
   }
-  rowNum = q[0];
-  orderCode = q[1];
+  const orderCode = q[1];
   document.getElementById("order-code").textContent = orderCode;
 
   try {
@@ -43,6 +40,7 @@ async function init() {
     }
 
     fillOrderCard();
+    // TODO: почему получаю все заказы
     await tryFillDriverFields();
   } catch (e) {
     alert("Ошибка загрузки заказа");
@@ -163,7 +161,7 @@ async function tryFillDriverFields() {
       let respArr;
       try {
         respArr = JSON.parse(row.driver_responses);
-      } catch (e) {
+      } catch (_e) {
         continue;
       }
 
@@ -246,7 +244,7 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
   resp.push(newResp);
 
   try {
-    await fetch(`/api/orders/${orderCode}`, {
+    await fetch(`/api/orders/${order.order_code}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -266,19 +264,57 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
 });
 
 async function sendNotif(resp) {
-  try {
-    await fetch(`/api/telegram`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        order_code: orderCode,
-        row_number: rowNum,
-        resp,
-      }),
-    });
-  } catch (err) {
-    console.error("Failed to send driver notification via backend:", err);
-  }
+  const link = `https://xn--80ahcabg2akskmd2q.xn--p1ai/route?${rowNumber}-${order.order_code}`;
+  // ТГ клиенту
+  // Для клиента: первое имя водителя, марка авто, комментарий и стоимость с комиссией 21%
+  const clientMsg =
+    `<b>Новый отклик по заказу №${order.order_code}</b>\n` +
+    `Водитель: ${resp.first_name}\n` +
+    `Марка авто: ${resp.car_brand || "—"}\n` +
+    `Комментарий: ${resp.comment || "—"}\n` +
+    `Сумма с комиссией: ${resp.cost_with_com}₽\n` +
+    `<a href="${link}">Подтвердить предложение</a>`;
+
+  await fetch(`/api/telegram/notification/client`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: order.telegram_id,
+      text: clientMsg,
+    }),
+  });
+  // ТГ админу
+  // Для админа: полная разбивка с использованием cost_with_com
+  const adminPaying = Math.round(resp.bid * 0.105);
+  const adminFactProfit = Math.round(resp.bid * 0.105);
+  const adminMsg =
+    `<b>Отклик по заказу №${order.order_code}</b>\n` +
+    `Водитель: ${resp.first_name}\n` +
+    `Телефон: ${resp.phone}\n` +
+    `Марка: ${resp.car_brand}\n` +
+    `Номер: ${resp.car_num}\n` +
+    `Цвет: ${resp.car_color}\n` +
+    `Сумма предложения (драйвер): ${resp.bid}₽\n` +
+    `Стоимость с комиссией 21%: ${resp.cost_with_com}₽\n` +
+    `— Эквайринг 10,5%: ${adminPaying}₽\n` +
+    `— Факт. доход 10,5%: ${adminFactProfit}₽`;
+
+  await fetch(`/api/telegram/notification/admin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: adminMsg,
+    }),
+  });
+  // ТГ драйвер-чат
+  // Для чата водителей: стандартно
+  await fetch(`/api/telegram/notification/drivers-chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: `По заказу №${order.order_code} +1 новый отклик`,
+    }),
+  });
 }
 
 window.onTelegramAuth = onTelegramAuth;

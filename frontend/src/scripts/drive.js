@@ -1,7 +1,6 @@
 // Global state
 let userData = null;
 let map = null;
-let currentStep = 1;
 let routeData = { departure: "", destination: "", distance: 0, coords: {} };
 let selectedTariff = null;
 let markers = [];
@@ -131,7 +130,6 @@ function goToStep(step) {
     if (i + 1 < step) el.classList.add("completed");
     if (i + 1 === step) el.classList.add("active");
   });
-  currentStep = step;
   window.scrollTo({ top: 0, behavior: "smooth" });
   // Update tariff costs if going to step 3
   if (step === 3) {
