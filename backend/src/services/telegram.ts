@@ -119,3 +119,25 @@ export async function notifyDriverResponse(
     console.error("notifyDriverResponse error:", err);
   }
 }
+
+export async function notifyAdmin(text: string) {
+  if (ADMIN_CHAT) {
+    await sendMessage(ADMIN_CHAT, text).catch((err) => {
+      console.error("notifyAdmin error:", err);
+    });
+  }
+}
+
+export async function notifyDriversChat(text: string) {
+  if (DRIVERS_CHAT) {
+    await sendMessage(DRIVERS_CHAT, text).catch((err) => {
+      console.error("notifyDriversChat error:", err);
+    });
+  }
+}
+
+export async function notifyClient(chatId: string | number, text: string) {
+  await sendMessage(chatId, text).catch((err) => {
+    console.error("notifyClient error:", err);
+  });
+}

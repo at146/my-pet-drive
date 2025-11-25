@@ -1,9 +1,6 @@
 const CONF = {
   MERCHANT: "Petsit",
   PASS1: "ejY7rDzZWA77Lk27mLrI",
-  BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
-  ADMIN_CHAT: "209183016",
-  DRIVERS_CHAT: "-1001905857177",
 };
 const p = location.search.replace("?", "").split("-");
 if (p.length !== 2) {
@@ -290,36 +287,30 @@ function cancelLogicUI() {
 }
 
 async function sendCancelNotif(cause) {
-  const bot = `https://api.telegram.org/bot${CONF.BOT_TOKEN}/sendMessage`;
   try {
     // ТГ клиенту
-    await fetch(bot, {
+    await fetch(`/api/telegram/notification/client`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: order.telegram_id,
         text: `Заказ №${order.order_code} был отменён. Мы будем рады помочь с перевозкой питомца в другой раз!`,
-        parse_mode: "HTML",
       }),
     });
     // ТГ админу
-    await fetch(bot, {
+    await fetch(`/api/telegram/notification/admin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.ADMIN_CHAT,
         text: `Заказ №${order.order_code} был отменён с указанием причины: ${cause}\nДанные клиента:\n• Telegram: @${order.client_username}\n• Телефон: ${order.client_phone}`,
-        parse_mode: "HTML",
       }),
     });
     // ТГ драйвер-чат
-    await fetch(bot, {
+    await fetch(`/api/telegram/notification/drivers-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.DRIVERS_CHAT,
         text: `❌ Сбор и рассмотрение откликов для заказа №${order.order_code} остановлен(ы)\n\nПримечание: Клиент отменил заказ\n\n❌ ОТМЕНА`,
-        parse_mode: "HTML",
       }),
     });
   } catch (e) {
@@ -360,36 +351,30 @@ async function confirmDriver(i) {
 }
 
 async function sendConfirmNotif(drv) {
-  const bot = `https://api.telegram.org/bot${CONF.BOT_TOKEN}/sendMessage`;
   try {
-    // Водителю
-    await fetch(bot, {
+    // ТГ водителю
+    await fetch(`/api/telegram/notification/client`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: drv.telegram_id,
         text: `✅ Вы выбраны для заказа №${order.order_code}!\n\n Клиент: ${order.client_name}\n Маршрут:\n${order.departure_address} → ${order.destination_address}\n ДИСТАНЦИЯ: ${order.distance_km} км\n Питомец: ${order.animal_type}, ${order.weight_kg} кг\n Дата и время: ${order.trip_date} в ${order.trip_time}\n\n Ваша оплата: ${drv.bid}₽\n\n⏳ Ожидайте оплаты от клиента.\nКонтактные данные будут доступны после оплаты.`,
-        parse_mode: "HTML",
       }),
     });
-    // Админу
-    await fetch(bot, {
+    // ТГ админу
+    await fetch(`/api/telegram/notification/admin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.ADMIN_CHAT,
         text: `✅ Водитель выбран для заказа №${order.order_code}\n\n Клиент: ${order.client_name} (@${order.client_username})\n Водитель: ${drv.first_name} (@${drv.username})\n\n Ставка водителя: ${drv.bid} ₽\n Стоимость заказа: ${drv.cost_with_com} ₽\n ${order.departure_address} → ${order.destination_address}\n\n⏳ Ожидание оплаты`,
-        parse_mode: "HTML",
       }),
     });
-    // Драйвер-чат
-    await fetch(bot, {
+    // ТГ драйвер-чат
+    await fetch(`/api/telegram/notification/drivers-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.DRIVERS_CHAT,
         text: `❌ Сбор откликов для заказа №${order.order_code} остановлен\n\nПоздравляем (@${drv.username}) с назначением на заказ!\n\n⏳ Ожидание оплаты`,
-        parse_mode: "HTML",
       }),
     });
   } catch (e) {
@@ -398,6 +383,7 @@ async function sendConfirmNotif(drv) {
 }
 
 function createPayment() {
+  // TODO: вынести в backend
   const sum = parseFloat(order.driver_cost_with_com || order.driver_bid || 0);
   if (!sum) {
     alert("Ставка водителя не указана");
