@@ -30,20 +30,20 @@ getUserIP();
 function applyPhoneMask(input) {
   let value = input.value.replace(/\D/g, "");
   if (value.length > 0 && value[0] !== "7") {
-    value = "7" + value;
+    value = `7${value}`;
   }
   let formatted = "+7";
   if (value.length > 1) {
-    formatted += " (" + value.substring(1, 4);
+    formatted += ` (${value.substring(1, 4)}`;
   }
   if (value.length >= 5) {
-    formatted += ") " + value.substring(4, 7);
+    formatted += `) ${value.substring(4, 7)}`;
   }
   if (value.length >= 8) {
-    formatted += "-" + value.substring(7, 9);
+    formatted += `-${value.substring(7, 9)}`;
   }
   if (value.length >= 10) {
-    formatted += "-" + value.substring(9, 11);
+    formatted += `-${value.substring(9, 11)}`;
   }
   input.value = formatted;
 }
@@ -55,7 +55,7 @@ function stripPhone(phone) {
 function addCommentSuggestion(text) {
   const commentField = document.getElementById("driver-comment");
   if (commentField.value) {
-    commentField.value += "; " + text;
+    commentField.value += `; ${text}`;
   } else {
     commentField.value = text;
   }
@@ -256,7 +256,7 @@ async function calculateRoute() {
     document.getElementById("next-to-step-2").disabled = false;
   } catch (error) {
     console.error("Route calculation error:", error);
-    alert("Ошибка расчёта маршрута: " + error.message);
+    alert(`Ошибка расчёта маршрута: ${error.message}`);
   }
   btn.disabled = false;
   btn.textContent = "Рассчитать маршрут";
@@ -408,7 +408,7 @@ async function submitOrder() {
     });
     if (!response.ok) {
       const txt = await response.text();
-      throw new Error("Backend error: " + response.status + " " + txt);
+      throw new Error(`Backend error: ${response.status} ${txt}`);
     }
     const respData = await response.json();
     const rowNumber = respData.row_number || respData.row_number || 1;
@@ -421,7 +421,7 @@ async function submitOrder() {
     startRedirectCountdown();
   } catch (error) {
     console.error("Submit error:", error);
-    alert("Ошибка создания заказа: " + error.message);
+    alert(`Ошибка создания заказа: ${error.message}`);
     btn.disabled = false;
     btn.textContent = "Оформить заказ";
   }
@@ -483,7 +483,7 @@ async function sendTelegramNotifications(order, orderCode, rowNumber) {
 Животное: ${order.animal_type}, ${order.weight_kg}кг
 Дата: ${order.trip_date} в ${order.trip_time}
 Выплата: ${order.driver_cost}₽
-${order.mssg_cl ? "\n Комментарий: " + order.mssg_cl : ""}
+${order.mssg_cl ? `\n Комментарий: ${order.mssg_cl}` : ""}
 <a href="${driverLink}">Откликнуться на заказ</a>`,
         parse_mode: "HTML",
       }),
@@ -518,7 +518,7 @@ function generateOrderCode() {
   return code;
 }
 // Event listeners
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   // Auto-calculate cost on weight change
   document.getElementById("weight").addEventListener("input", () => {
     if (selectedTariff) calculateCost();
@@ -552,7 +552,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("weight")
     .addEventListener("input", checkStep2Required);
-  document.getElementById("trip-date").addEventListener("change", function () {
+  document.getElementById("trip-date").addEventListener("change", () => {
     checkStep2Required();
     checkTariffAvailability();
   });
