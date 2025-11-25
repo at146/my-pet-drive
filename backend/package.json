@@ -1,11 +1,7 @@
 {
   "name": "backend",
   "version": "0.1.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
   "type": "commonjs",
-  "main": "index.js",
   "scripts": {
     "lint": "biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true ./",
     "dev": "nodemon",
