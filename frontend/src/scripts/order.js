@@ -99,13 +99,12 @@ function fillOrderCard() {
   document.getElementById("datetime").textContent = `${order.trip_date} в ${
     order.trip_time || "—"
   }`;
-  document.getElementById(
-    "pet"
-  ).textContent = `${order.animal_type}, ${order.weight_kg} кг`;
+  document.getElementById("pet").textContent =
+    `${order.animal_type}, ${order.weight_kg} кг`;
   document.getElementById("driver-pay").textContent = order.driver_cost;
   document.getElementById("bid").value = order.driver_cost;
 
-  if (order.mssg_cl && order.mssg_cl.trim()) {
+  if (order.mssg_cl?.trim()) {
     document.getElementById("client-comment-block").classList.remove("hidden");
     document.getElementById("client-comment").textContent = order.mssg_cl;
   }
@@ -123,7 +122,7 @@ function showMiniMap() {
       attributionControl: false,
     });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
-      map
+      map,
     );
   }
 
@@ -148,8 +147,8 @@ function showMiniMap() {
 async function geo(addr) {
   const r = await fetch(
     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      addr
-    )}&limit=1`
+      addr,
+    )}&limit=1`,
   );
   const d = await r.json();
   if (!d || !d.length) throw new Error("Geocode failed");
@@ -176,7 +175,7 @@ async function tryFillDriverFields() {
       if (Array.isArray(respArr)) {
         for (let j = respArr.length - 1; j >= 0; j--) {
           let resp = respArr[j];
-          if (resp.telegram_id == driver.id) {
+          if (resp.telegram_id === driver.id) {
             lastDriverData = resp;
             break;
           }
@@ -226,11 +225,12 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
     resp = JSON.parse(order.driver_responses || "[]");
   } catch {}
 
-  if (resp.some((r) => r.telegram_id == driver.id)) {
+  if (resp.some((r) => r.telegram_id === driver.id)) {
     alert("Вы уже откликнулись на этот заказ");
     return;
   }
-
+  // TODO: проверить, что ставка не ниже минимальной (order.driver_cost)
+  // TODO: можно поменять цену
   // Расчет стоимости с комиссией 21%
   const cost_with_com = Math.round(bid * (1 + CONFIG.COMMISSION_RATE));
 
@@ -346,3 +346,5 @@ async function sendNotif(resp) {
     }),
   });
 }
+
+window.onTelegramAuth = onTelegramAuth;
