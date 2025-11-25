@@ -31,12 +31,7 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     const clientLink = `/route?${rowNumber}-${order.order_code}`;
     await sendMessage(
       order.telegram_id,
-      `Ваш заказ №${order.order_code} принят!\n\n
-      Маршрут: ${order.departure_address} → ${order.destination_address}\n\
-      Расстояние: ${order.distance_km} км\n
-      Дата: ${order.trip_date} в ${order.trip_time}\n\n
-      Ожидайте откликов водителей в течение 15 минут.\n\n
-      Ссылка на ваш заказ: https://мояпередержка.рф${clientLink}`,
+      `Ваш заказ №${order.order_code} принят!\nМаршрут: ${order.departure_address} → ${order.destination_address}\nРасстояние: ${order.distance_km} км\nДата: ${order.trip_date} в ${order.trip_time}\nОжидайте откликов водителей в течение 15 минут.\nСсылка на ваш заказ: https://мояпередержка.рф${clientLink}`,
     );
     console.log("✓ Notification sent to client");
 
@@ -46,15 +41,15 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     if (driversChat) {
       await sendMessage(
         driversChat,
-        `Новый заказ №${order.order_code}\n\n
-        Откуда: ${order.departure_address}\n
-        Куда: ${order.destination_address}\n
-        Расстояние: ${order.distance_km} км\n
-        Животное: ${order.animal_type}, ${order.weight_kg}кг\n
-        Дата: ${order.trip_date} в ${order.trip_time}\n
-        Выплата: ${order.driver_cost}₽\n\n
-        ${order.mssg_cl ? `\nКомментарий: ${order.mssg_cl}` : ""}\n\n
-        <a href="${driverLink}">Откликнуться на заказ</a>`,
+        `Новый заказ №${order.order_code}\nОткуда: ${
+          order.departure_address
+        }\nКуда: ${order.destination_address}\nРасстояние: ${
+          order.distance_km
+        } км\nЖивотное: ${order.animal_type}, ${order.weight_kg}кг\nДата: ${
+          order.trip_date
+        } в ${order.trip_time}\nВыплата: ${order.driver_cost}₽\n${
+          order.mssg_cl ? `\nКомментарий: ${order.mssg_cl}` : ""
+        }\n<a href="${driverLink}">Откликнуться на заказ</a>`,
       );
       console.log("✓ Notification sent to drivers");
     }
@@ -64,10 +59,7 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     if (adminChat) {
       await sendMessage(
         adminChat,
-        `Новый заказ №${order.order_code}\n
-        Клиент: ${order.client_name} (@${order.client_username})\n
-        Маршрут: ${order.departure_address} → ${order.destination_address}\n
-        Стоимость: ${order.total_cost}₽`,
+        `Новый заказ №${order.order_code}\nКлиент: ${order.client_name} (@${order.client_username})\nМаршрут: ${order.departure_address} → ${order.destination_address}\nСтоимость: ${order.total_cost}₽`,
       );
       console.log("✓ Notification sent to admin");
     }
