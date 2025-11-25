@@ -1,9 +1,9 @@
 const CONFIG = {
-  SHEETDB: "https://sheetdb.io/api/v1/6o3cza4d6vggw",
-  BOT_TOKEN: "8051112543:AAFL3Slv1q1NadBxAIq29gefPWWd5dNGh_Y",
+  SHEETDB: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
+  BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
   CLIENT_BOT: "@MoyaPerederjkaTaxi_bot",
-  ADM_CHAT: "5993771305",
-  DRV_CHAT: "-1002282040380",
+  ADM_CHAT: "209183016",
+  DRV_CHAT: "-1001905857177",
   COMMISSION_RATE: 0.21, // 21% комиссия
 };
 
