@@ -1,29 +1,44 @@
 import { Router } from "express";
-import { updateSheet, createSheetOrder } from "../services/sheetdb.js";
-import { sendTelegram } from "../services/telegram.js";
+import { createSheetOrder, findOrderRowNumber } from "../services/sheetdb";
+import { notifyAll } from "../services/telegram";
 
 const router = Router();
 
+/**
+ * Endpoint to create a full order.
+ * Expects the frontend to send the same object that was previously posted directly to SheetDB.
+ */
 router.post("/create-order", async (req, res) => {
     try {
-        const { from, to, distance } = req.body;
+        const order = req.body;
+        if (!order || !order.order_code) {
+            return res.status(400).json({ error: "Invalid order payload" });
+        }
 
-        // 🔐 Recalculate price server-side
-        const price = distance * 25; // Example formula
+        // Save to SheetDB
+        await createSheetOrder(order);
 
-        // Save to DB
-        const order = await createSheetOrder({ from, to, price });
+        // Try to find row number (may require a short delay on SheetDB side)
+        let rowNumber = null;
+        try {
+            // a couple attempts with small delay to allow SheetDB to update
+            for (let i = 0; i < 5; i++) {
+                rowNumber = await findOrderRowNumber(order.order_code);
+                if (rowNumber) break;
+                await new Promise((r) => setTimeout(r, 800));
+            }
+        } catch (err) {
+            console.warn("Could not determine row number:", err);
+        }
 
-        // Send Telegram message
-        await sendTelegram(
-            `🚖 New order: ${from} → ${to}\nPrice: ${price} ₽\nID: ${order.id}`
-        );
+        // Send Telegram notifications (client/drivers/admin)
+        try {
+            await notifyAll(order, rowNumber);
+        } catch (err) {
+            console.error("Telegram notify error:", err);
+        }
 
-        res.json({
-            success: true,
-            orderId: order.id,
-            price
-        });
+        return res.json({ success: true, order_code: order.order_code, row_number: rowNumber });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server error" });

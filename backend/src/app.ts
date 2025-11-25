@@ -1,15 +1,19 @@
-// src/app.ts
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import ordersRouter from "./routes/orders.js";
-import paymentRouter from "./routes/payment.js";
 
 dotenv.config();
 
+import ordersRouter from "./routes/orders";
+import paymentRouter from "./routes/payment";
+
+
 const app = express();
-app.use(cors());
-app.use(express.json());
+const corsMiddleware = cors()
+app.use(corsMiddleware);
+
+const jsonMiddleware = express.json();
+app.use(jsonMiddleware);
 
 // Routes
 app.use("/api", ordersRouter);
