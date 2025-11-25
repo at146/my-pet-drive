@@ -75,11 +75,11 @@ function statusUI() {
     .querySelectorAll(".stepbar div")
     .forEach((d) => d.classList.remove("done", "active"));
   const badge = document.getElementById("badge");
-  const sd = (s) => document.getElementById("s" + s).classList.add("done");
-  const sa = (s) => document.getElementById("s" + s).classList.add("active");
+  const sd = (s) => document.getElementById(`s${s}`).classList.add("done");
+  const sa = (s) => document.getElementById(`s${s}`).classList.add("active");
   const set = (t, c) => {
     badge.textContent = t;
-    badge.className = "badge " + c;
+    badge.className = `badge ${c}`;
   };
   switch (order.status) {
     case "СОЗДАН":
@@ -149,7 +149,7 @@ function bidsUI() {
          Машина: ${b.car_brand || "-"}<br>
          Комментарий: ${
            b.comment || "—"
-         }<br><br> <button onclick="confirmDriver(${i})">Подтвердить</button> </div>`
+         }<br><br> <button onclick="confirmDriver(${i})">Подтвердить</button> </div>`,
       )
       .join("");
     box.classList.remove("hidden");
@@ -161,7 +161,7 @@ function driverUI() {
     payBtn = document.getElementById("pay-btn");
   if (
     ["ВОДИТЕЛЬ_НАЙДЕН", "ОЖИДАНИЕ_ОПЛАТЫ", "ОПЛАЧЕН", "УСПЕШНО"].includes(
-      order.status
+      order.status,
     )
   ) {
     el("drv-name", `${order.driver_first_name}`);
@@ -235,8 +235,8 @@ function updateMap() {
 async function geo(addr) {
   const r = await fetch(
     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      addr
-    )}&limit=1`
+      addr,
+    )}&limit=1`,
   );
   const d = await r.json();
   return [+d[0].lat, +d[0].lon];
@@ -269,7 +269,7 @@ function cancelLogicUI() {
     (e) =>
       (e.onclick = () => {
         cancelInput.value = e.textContent;
-      })
+      }),
   );
   cancelFinal.onclick = async () => {
     let reason = cancelInput.value || "";
@@ -430,9 +430,9 @@ function createPayment() {
   const url = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${
     CONF.MERCHANT
   }&OutSum=${outSum}&InvId=${invId}&Description=${encodeURIComponent(
-    desc
+    desc,
   )}&${shpParam}&Receipt=${encodeURIComponent(
-    receipt
+    receipt,
   )}&SignatureValue=${signVal}`;
   fetch(`${CONF.SHEET}/order_code/${CODE}`, {
     method: "PATCH",
