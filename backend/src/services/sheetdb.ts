@@ -57,3 +57,36 @@ export async function getOrderByCode(orderCode: string) {
   if (!Array.isArray(json) || !json.length) return null;
   return json[0];
 }
+
+export async function getAllOrders() {
+  if (!SHEETDB_URL) throw new Error("SHEETDB_URL is not configured");
+  const resp = await fetch(SHEETDB_URL);
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`SheetDB error: ${resp.status} ${txt}`);
+  }
+  const json = await resp.json();
+  if (!Array.isArray(json)) {
+    throw new Error("Invalid SheetDB response: expected an array");
+  }
+  return json;
+}
+
+export async function updateOrder(
+  orderCode: string,
+  updates: Record<string, unknown>,
+) {
+  if (!SHEETDB_URL) throw new Error("SHEETDB_URL is not configured");
+  const url = `${SHEETDB_URL}/order_code/${encodeURIComponent(orderCode)}`;
+  const resp = await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: updates }),
+  });
+
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`SheetDB update error: ${resp.status} ${txt}`);
+  }
+  console.log(`✓ Order ${orderCode} updated in SheetDB`);
+}
