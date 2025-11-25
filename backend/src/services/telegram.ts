@@ -31,7 +31,7 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     const clientLink = `/route?${rowNumber}-${order.order_code}`;
     await sendMessage(
       order.telegram_id,
-      `Ваш заказ №${order.order_code} принят!\nМаршрут: ${order.departure_address} → ${order.destination_address}\nРасстояние: ${order.distance_km} км\nДата: ${order.trip_date} в ${order.trip_time}\nОжидайте откликов водителей в течение 15 минут.\nСсылка на ваш заказ: https://мояпередержка.рф${clientLink}`,
+      `Ваш заказ №${order.order_code} принят!\n\nМаршрут: ${order.departure_address} → ${order.destination_address}\nРасстояние: ${order.distance_km} км\nДата: ${order.trip_date} в ${order.trip_time}\n\nОжидайте откликов водителей в течение 15 минут.\n\nСсылка на ваш заказ: https://мояпередержка.рф${clientLink}`,
     );
     console.log("✓ Notification sent to client");
 
@@ -41,7 +41,7 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     if (driversChat) {
       await sendMessage(
         driversChat,
-        `Новый заказ №${order.order_code}\nОткуда: ${
+        `Новый заказ №${order.order_code}\n\nОткуда: ${
           order.departure_address
         }\nКуда: ${order.destination_address}\nРасстояние: ${
           order.distance_km
@@ -49,7 +49,7 @@ export async function notifyAll(order: any, rowNumber: number | null) {
           order.trip_date
         } в ${order.trip_time}\nВыплата: ${order.driver_cost}₽\n${
           order.mssg_cl ? `\nКомментарий: ${order.mssg_cl}` : ""
-        }\n<a href="${driverLink}">Откликнуться на заказ</a>`,
+        }\n\n<a href="${driverLink}">Откликнуться на заказ</a>`,
       );
       console.log("✓ Notification sent to drivers");
     }
