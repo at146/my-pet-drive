@@ -1,15 +1,14 @@
-import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import express from "express";
 
 dotenv.config();
 
 import ordersRouter from "./routes/orders";
 import paymentRouter from "./routes/payment";
 
-
 const app = express();
-const corsMiddleware = cors()
+const corsMiddleware = cors();
 app.use(corsMiddleware);
 
 const jsonMiddleware = express.json();
@@ -22,5 +21,5 @@ app.use("/api", paymentRouter);
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
+  console.log(`Server started on port ${PORT}`);
 });
