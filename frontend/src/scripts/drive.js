@@ -165,7 +165,7 @@ function getCurrentLocation() {
       const lon = position.coords.longitude;
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
         );
         const data = await response.json();
         document.getElementById("departure").value = data.display_name;
@@ -181,11 +181,11 @@ function getCurrentLocation() {
     (error) => {
       console.error("Geolocation error:", error);
       alert(
-        "Не удалось определить местоположение. Разрешите доступ к геолокации."
+        "Не удалось определить местоположение. Разрешите доступ к геолокации.",
       );
       btn.disabled = false;
       btn.textContent = "Определить моё местоположение";
-    }
+    },
   );
 }
 // Calculate Route
@@ -206,8 +206,8 @@ async function calculateRoute() {
     if (!routeData.coords.departure) {
       const depResp = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          departure
-        )}&limit=1`
+          departure,
+        )}&limit=1`,
       );
       const depData = await depResp.json();
       if (!depData || depData.length === 0)
@@ -220,8 +220,8 @@ async function calculateRoute() {
     // Geocode destination
     const destResp = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        destination
-      )}&limit=1`
+        destination,
+      )}&limit=1`,
     );
     const destData = await destResp.json();
     if (!destData || destData.length === 0)
@@ -285,7 +285,7 @@ function showMap() {
     {
       color: "#667eea",
       weight: 3,
-    }
+    },
   ).addTo(map);
   markers.push(line);
   map.fitBounds([routeData.coords.departure, routeData.coords.destination], {
@@ -345,9 +345,8 @@ function calculateCost() {
 // Update Summary
 function updateSummary() {
   const costs = calculateCost();
-  document.getElementById(
-    "summary-route"
-  ).textContent = `${routeData.departure} → ${routeData.destination} (${routeData.distance} км)`;
+  document.getElementById("summary-route").textContent =
+    `${routeData.departure} → ${routeData.destination} (${routeData.distance} км)`;
   document.getElementById("summary-pet").textContent = `${
     document.getElementById("animal-type").value
   },
@@ -413,7 +412,7 @@ async function submitOrder() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     // Get row number
     const searchResp = await fetch(
-      `${CONFIG.SHEETDB_URL}/search?order_code=${orderCode}`
+      `${CONFIG.SHEETDB_URL}/search?order_code=${orderCode}`,
     );
     const searchData = await searchResp.json();
     const rowNumber = searchData[0]?.row_number || 1;
@@ -561,3 +560,13 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   phoneInput.addEventListener("input", checkStep2Required);
 });
+
+// Expose functions to global scope for inline handlers and Telegram widget
+window.handleTelegramAuth = handleTelegramAuth;
+window.getCurrentLocation = getCurrentLocation;
+window.calculateRoute = calculateRoute;
+window.goToStep = goToStep;
+window.selectTariff = selectTariff;
+window.addCommentSuggestion = addCommentSuggestion;
+window.submitOrder = submitOrder;
+window.goToOrderPage = goToOrderPage;
