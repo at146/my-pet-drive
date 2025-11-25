@@ -1,9 +1,8 @@
 const CONFIG = {
-  SHEETDB: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
+  SHEETDB_URL: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
   BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
-  CLIENT_BOT: "@MoyaPerederjkaTaxi_bot",
-  ADM_CHAT: "209183016",
-  DRV_CHAT: "-1001905857177",
+  ADMIN_CHAT: "209183016",
+  DRIVERS_CHAT: "-1001905857177",
   COMMISSION_RATE: 0.21, // 21% комиссия
 };
 
@@ -32,7 +31,7 @@ async function init() {
   document.getElementById("order-code").textContent = orderCode;
 
   try {
-    const r = await fetch(`${CONFIG.SHEETDB}/search?order_code=${orderCode}`);
+    const r = await fetch(`${CONFIG.SHEETDB_URL}/search?order_code=${orderCode}`);
     const data = await r.json();
     if (!data.length) {
       alert("Заказ не найден");
@@ -157,7 +156,7 @@ async function geo(addr) {
 
 async function tryFillDriverFields() {
   try {
-    const r = await fetch(`${CONFIG.SHEETDB}`);
+    const r = await fetch(`${CONFIG.SHEETDB_URL}`);
     const allData = await r.json();
     let lastDriverData = null;
 
@@ -251,7 +250,7 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
   resp.push(newResp);
 
   try {
-    await fetch(`${CONFIG.SHEETDB}/order_code/${orderCode}`, {
+    await fetch(`${CONFIG.SHEETDB_URL}/order_code/${orderCode}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -329,7 +328,7 @@ async function sendNotif(resp) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      chat_id: CONFIG.ADM_CHAT,
+      chat_id: CONFIG.ADMIN_CHAT,
       text: adminMsg,
       parse_mode: "HTML",
     }),
@@ -340,7 +339,7 @@ async function sendNotif(resp) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      chat_id: CONFIG.DRV_CHAT,
+      chat_id: CONFIG.DRIVERS_CHAT,
       text: `По заказу №${orderCode} +1 новый отклик`,
       parse_mode: "HTML",
     }),

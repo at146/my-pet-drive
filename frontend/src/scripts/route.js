@@ -1,10 +1,10 @@
 const CONF = {
-  SHEET: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
+  SHEETDB_URL: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
   MERCHANT: "Petsit",
   PASS1: "ejY7rDzZWA77Lk27mLrI",
   BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
-  ADM_CHAT: "209183016",
-  DRV_CHAT: "-1001905857177",
+  ADMIN_CHAT: "209183016",
+  DRIVERS_CHAT: "-1001905857177",
 };
 const p = location.search.replace("?", "").split("-");
 if (p.length !== 2) {
@@ -20,7 +20,7 @@ let order = null,
 
 async function loadOrder() {
   try {
-    const r = await fetch(`${CONF.SHEET}/search?order_code=${CODE}`);
+    const r = await fetch(`${CONF.SHEETDB_URL}/search?order_code=${CODE}`);
     const d = await r.json();
     if (!d.length) {
       alert("Заказ не найден");
@@ -281,7 +281,7 @@ function cancelLogicUI() {
       status: "ОТМЕНА",
       cancel_wtf: `${reason}; ${new Date().toLocaleString("ru-RU")}`,
     };
-    await fetch(`${CONF.SHEET}/order_code/${CODE}`, {
+    await fetch(`${CONF.SHEETDB_URL}/order_code/${CODE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data: payload }),
@@ -309,7 +309,7 @@ async function sendCancelNotif(cause) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.ADM_CHAT,
+        chat_id: CONF.ADMIN_CHAT,
         text: `Заказ №${order.order_code} был отменён с указанием причины: ${cause}\nДанные клиента:\n• Telegram: @${order.client_username}\n• Телефон: ${order.client_phone}`,
         parse_mode: "HTML",
       }),
@@ -319,7 +319,7 @@ async function sendCancelNotif(cause) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.DRV_CHAT,
+        chat_id: CONF.DRIVERS_CHAT,
         text: `❌ Сбор и рассмотрение откликов для заказа №${order.order_code} остановлен(ы)\n\nПримечание: Клиент отменил заказ\n\n❌ ОТМЕНА`,
         parse_mode: "HTML",
       }),
@@ -334,7 +334,7 @@ async function confirmDriver(i) {
   const bids = JSON.parse(order.driver_responses),
     drv = bids[i];
   try {
-    await fetch(`${CONF.SHEET}/order_code/${CODE}`, {
+    await fetch(`${CONF.SHEETDB_URL}/order_code/${CODE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -381,7 +381,7 @@ async function sendConfirmNotif(drv) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.ADM_CHAT,
+        chat_id: CONF.ADMIN_CHAT,
         text: `✅ Водитель выбран для заказа №${order.order_code}\n\n Клиент: ${order.client_name} (@${order.client_username})\n Водитель: ${drv.first_name} (@${drv.username})\n\n Ставка водителя: ${drv.bid} ₽\n Стоимость заказа: ${drv.cost_with_com} ₽\n ${order.departure_address} → ${order.destination_address}\n\n⏳ Ожидание оплаты`,
         parse_mode: "HTML",
       }),
@@ -391,7 +391,7 @@ async function sendConfirmNotif(drv) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: CONF.DRV_CHAT,
+        chat_id: CONF.DRIVERS_CHAT,
         text: `❌ Сбор откликов для заказа №${order.order_code} остановлен\n\nПоздравляем (@${drv.username}) с назначением на заказ!\n\n⏳ Ожидание оплаты`,
         parse_mode: "HTML",
       }),
@@ -434,7 +434,7 @@ function createPayment() {
   )}&${shpParam}&Receipt=${encodeURIComponent(
     receipt
   )}&SignatureValue=${signVal}`;
-  fetch(`${CONF.SHEET}/order_code/${CODE}`, {
+  fetch(`${CONF.SHEETDB_URL}/order_code/${CODE}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data: { payment_url: url } }),
