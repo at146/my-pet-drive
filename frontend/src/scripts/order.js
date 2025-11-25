@@ -1,5 +1,4 @@
 const CONFIG = {
-  SHEETDB_URL: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
   ADMIN_CHAT: "209183016",
   DRIVERS_CHAT: "-1001905857177",
   COMMISSION_RATE: 0.21, // 21% комиссия
@@ -30,13 +29,13 @@ async function init() {
   document.getElementById("order-code").textContent = orderCode;
 
   try {
-    const r = await fetch(`${CONFIG.SHEETDB_URL}/search?order_code=${orderCode}`);
-    const data = await r.json();
-    if (!data.length) {
+    const r = await fetch(`/api/orders/${orderCode}`);
+    if (!r.ok) {
       alert("Заказ не найден");
       return;
     }
-    order = data[0];
+    const data = await r.json();
+    order = data;
 
     // ВАЛИДАЦИЯ СТАТУСА ЗАКАЗА
     const validationResult = validateOrderStatus(order.status);
@@ -155,7 +154,7 @@ async function geo(addr) {
 
 async function tryFillDriverFields() {
   try {
-    const r = await fetch(`${CONFIG.SHEETDB_URL}`);
+    const r = await fetch("/api/orders");
     const allData = await r.json();
     let lastDriverData = null;
 
@@ -249,14 +248,12 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
   resp.push(newResp);
 
   try {
-    await fetch(`${CONFIG.SHEETDB_URL}/order_code/${orderCode}`, {
+    await fetch(`/api/orders/${orderCode}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        data: {
-          status: "ОЖИДАНИЕ_ОТКЛИКОВ",
-          driver_responses: JSON.stringify(resp),
-        },
+        status: "ОЖИДАНИЕ_ОТКЛИКОВ",
+        driver_responses: JSON.stringify(resp),
       }),
     });
   } catch (err) {

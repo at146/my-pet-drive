@@ -393,9 +393,9 @@ async function submitOrder() {
       driver_responses: "[]",
       approve: `✓ ; ${timestamp} ; ${userIP} ; ${userData.id}`,
     };
-    console.log("Sending order to backend:/api/create-order", orderData);
+    console.log("Sending order to backend:/api/orders", orderData);
     // Send to backend which will store in SheetDB and notify Telegram
-    const response = await fetch(`/api/create-order`, {
+    const response = await fetch(`/api/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData),
