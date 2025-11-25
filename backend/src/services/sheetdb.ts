@@ -25,7 +25,7 @@ export async function createSheetOrder(order: any) {
 export async function findOrderRowNumber(orderCode: string) {
   if (!SHEETDB_URL) throw new Error("SHEETDB_URL is not configured");
   const url = `${SHEETDB_URL}/search?order_code=${encodeURIComponent(
-    orderCode
+    orderCode,
   )}`;
   const resp = await fetch(url);
   if (!resp.ok) {
