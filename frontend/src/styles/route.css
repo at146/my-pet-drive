@@ -1,0 +1,120 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: "Montserrat", sans-serif;
+  background: #fafafa;
+  padding: 24px;
+  color: #333;
+}
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 32px;
+  box-shadow: 0 14px 50px rgba(0, 0, 0, 0.18);
+}
+h1 {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.badge.gray {
+  background: #e0e0e0;
+}
+.badge.yellow {
+  background: #ffe082;
+}
+.badge.blue {
+  background: #bbdefb;
+}
+.badge.orange {
+  background: #ffcc80;
+}
+.badge.green {
+  background: #c8e6c9;
+}
+.badge.red {
+  background: #ffcdd2;
+}
+.stepbar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 32px;
+}
+.stepbar div {
+  flex: 1 1 100px;
+  text-align: center;
+  font-size: 13px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #e0e0e0;
+  color: #666;
+}
+.stepbar .done {
+  background: #4caf50;
+  color: #fff;
+}
+.stepbar .active {
+  background: #667eea;
+  color: #fff;
+}
+.card {
+  background: #f6f8ff;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 16px 0;
+  border-left: 4px solid #667eea;
+}
+.error {
+  background: #ffe7e7;
+  border-left-color: #d32f2f;
+}
+#map {
+  height: 260px;
+  border-radius: 10px;
+  margin: 18px 0;
+}
+.hidden {
+  display: none;
+}
+button {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 18px;
+}
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.25);
+}
+@media (max-width: 540px) {
+  .container {
+    padding: 20px;
+  }
+  #map {
+    height: 220px;
+  }
+}
+.red-btn {
+  background: linear-gradient(135deg, #ea6666, #a24b4b);
+  color: #fff;
+}
