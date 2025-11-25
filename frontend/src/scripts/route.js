@@ -441,3 +441,5 @@ function createPayment() {
   });
   window.open(url, "_blank");
 }
+
+window.confirmDriver = confirmDriver;
