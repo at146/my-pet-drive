@@ -6,7 +6,11 @@ const ADMIN_CHAT = process.env.ADMIN_CHAT;
 
 if (!BOT_TOKEN) console.warn("BOT_TOKEN not set; Telegram messages will fail");
 
-async function sendMessage(chatId: string | number, text: string, parse_mode = "HTML") {
+async function sendMessage(
+  chatId: string | number,
+  text: string,
+  parse_mode = "HTML",
+) {
   if (!BOT_TOKEN) return;
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
   try {
@@ -22,14 +26,14 @@ async function sendMessage(chatId: string | number, text: string, parse_mode = "
 
 // Send Telegram Notifications
 export async function notifyAll(order: any, rowNumber: number | null) {
-	try {
+  try {
     // To client - теперь с ссылкой на заказ в формате /route
     const clientLink = `/route?${rowNumber}-${order.order_code}`;
     await sendMessage(
       order.telegram_id,
-      `Ваш заказ №${order.order_code} принят!\nМаршрут: ${order.departure_address} → ${order.destination_address}\nРасстояние: ${order.distance_km} км\nДата: ${order.trip_date} в ${order.trip_time}\nОжидайте откликов водителей в течение 15 минут.\nСсылка на ваш заказ: https://мояпередержка.рф${clientLink}`
+      `Ваш заказ №${order.order_code} принят!\nМаршрут: ${order.departure_address} → ${order.destination_address}\nРасстояние: ${order.distance_km} км\nДата: ${order.trip_date} в ${order.trip_time}\nОжидайте откликов водителей в течение 15 минут.\nСсылка на ваш заказ: https://мояпередержка.рф${clientLink}`,
     );
-	console.log("✓ Notification sent to client");
+    console.log("✓ Notification sent to client");
 
     // To drivers
     const driverLink = `https://xn--80ahcabg2akskmd2q.xn--p1ai/order?${rowNumber}-${order.order_code}`;
@@ -44,10 +48,10 @@ export async function notifyAll(order: any, rowNumber: number | null) {
         } км\nЖивотное: ${order.animal_type}, ${order.weight_kg}кг\nДата: ${
           order.trip_date
         } в ${order.trip_time}\nВыплата: ${order.driver_cost}₽\n${
-          order.mssg_cl ? "\nКомментарий: " + order.mssg_cl : ""
-        }\n<a href=\"${driverLink}\">Откликнуться на заказ</a>`
+          order.mssg_cl ? `\nКомментарий: ${order.mssg_cl}` : ""
+        }\n<a href="${driverLink}">Откликнуться на заказ</a>`,
       );
-	  console.log("✓ Notification sent to drivers");
+      console.log("✓ Notification sent to drivers");
     }
 
     // To admin
@@ -55,11 +59,11 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     if (adminChat) {
       await sendMessage(
         adminChat,
-        `Новый заказ №${order.order_code}\nКлиент: ${order.client_name} (@${order.client_username})\nМаршрут: ${order.departure_address} → ${order.destination_address}\nСтоимость: ${order.total_cost}₽`
+        `Новый заказ №${order.order_code}\nКлиент: ${order.client_name} (@${order.client_username})\nМаршрут: ${order.departure_address} → ${order.destination_address}\nСтоимость: ${order.total_cost}₽`,
       );
-	  console.log("✓ Notification sent to admin");
+      console.log("✓ Notification sent to admin");
     }
   } catch (err) {
-		console.error("notifyAll error:", err);
-	}
+    console.error("notifyAll error:", err);
+  }
 }
