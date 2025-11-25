@@ -1,135 +1,149 @@
-# AI Coding Agent Instructions
+# Copilot Instructions for my-pet-drive
 
 ## Project Overview
+**my-pet-drive** is a pet transportation booking platform with three primary flows:
+1. **Clients** create orders for pet transport via the frontend
+2. **Drivers** bid on orders and submit responses
+3. **Backend** orchestrates SheetDB (Google Sheets API) as the database and Telegram for real-time notifications
 
-**My Pet Drive** is a pet transportation booking platform with:
-- **Backend**: Express.js + TypeScript API that manages orders and integrates external services
-- **Frontend**: Vanilla JS + Vite SPA with multi-step order form
-- **Data Flow**: Frontend → Backend → SheetDB (spreadsheet DB) + Telegram notifications + Robokassa payments
+**Architecture**: Monorepo with separate frontend (Vite + vanilla JS) and backend (Express + TypeScript).
 
-## Architecture & Key Components
+---
 
-### Backend (`/backend/src/`)
+## Key Data Flow & Critical Patterns
 
-**Express server** with three main concerns:
-- **`app.ts`**: Server setup with CORS and JSON middleware, routes registration
-- **`routes/orders.ts`**: Main order creation endpoint (`POST /api/create-order`)
-  - Accepts order payload from frontend
-  - Persists to SheetDB via `createSheetOrder()`
-  - Sends multi-recipient Telegram notifications via `notifyAll()`
-- **`routes/payment.ts`**: Robokassa payment link generation (MD5 signature auth)
-- **`services/telegram.ts`**: Sends HTML-formatted messages to three recipients: client, drivers, admin
-- **`services/sheetdb.ts`**: Wraps SheetDB API (POST for create, GET for search)
+### Order Lifecycle & Status Management
+Orders have explicit states managed in SheetDB's `status` field:
+- `ОЖИДАНИЕ_ОТКЛИКОВ` (awaiting responses) → drivers can submit bids
+- `ОЖИДАНИЕ_ОПЛАТЫ` (awaiting payment) → order locked, driver selected
+- `ОПЛАЧЕН` (paid) → completed
+- `ОТМЕНА` (cancelled) → no further bids allowed
 
-**Critical**: Order payload is **NOT validated/sanitized** on backend (TODO: prevent client price manipulation).
+**Critical**: Validate order status before accepting driver responses in `frontend/src/scripts/order.js` (see `validateOrderStatus()`). Blocked statuses raise alerts without backend calls.
 
-### Frontend (`/frontend/src/scripts/drive.js`)
+### Data Storage (SheetDB)
+- **Single source of truth**: Google Sheets via SheetDB REST API (`SHEETDB_URL` env var)
+- **Order fields** (examples): `order_code`, `status`, `driver_cost`, `total_cost`, `driver_responses` (JSON array), `client_name`, `telegram_id`, etc.
+- **API pattern**: `/search?order_code=X` for queries; `PATCH order_code/X` for updates; `POST` to create
+- **Error handling**: All SheetDB calls wrap errors with context (status + response text) in `backend/src/services/sheetdb.ts`
 
-**Single-page multi-step order form**:
-1. **Step 1**: Route calculation (geolocation → Nominatim geocoding → Haversine distance)
-2. **Step 2**: Pet & trip details (animal type, weight, date, phone)
-3. **Step 3**: Tariff selection (eco/opti/maxi) with availability logic
-4. **Step 4**: Order summary & review
-5. **Step 5**: Success screen with 5-second redirect
+### Telegram Integration (Real-time Notifications)
+Three chat recipients (env vars: `BOT_TOKEN`, `DRIVERS_CHAT`, `ADMIN_CHAT`):
+- **Client**: Receives order confirmation with `/route?rowNum-orderCode` link
+- **Drivers**: Receive new orders with callback button; receive "+1 response" summaries
+- **Admin**: Receives detailed logs with financial breakdowns
 
-**Key patterns**:
-- Global `routeData`, `userData`, `selectedTariff` state variables
-- All payment logic is **client-side**: costs calculated in JS (acquiring + service fees)
-- Tariff availability depends on trip date (see `checkTariffAvailability()`)
-- Phone input uses custom mask function (Russian format: +7 (XXX) XXX-XX-XX)
-
-## Development Workflow
-
-### Commands
-
-**Backend**:
-```bash
-cd backend
-npm run dev          # nodemon with ts-node (watches src/, runs on 3000 by default)
-npm run build        # TypeScript compilation to dist/
-npm run lint         # Biome formatter/linter with --unsafe flag
+**Key calculation in `notifyDriverResponse()`**: Commission is 21% on driver bid:
+```js
+cost_with_com = Math.round(bid * 1.21)  // Sent to client in notification
 ```
 
-**Frontend**:
+---
+
+## Developer Workflows
+
+### Running Services
 ```bash
-cd frontend
-npm run dev          # Vite dev server on port 7772, proxies /api to backend
-npm run build        # Vite production build
-npm run lint         # Biome formatter/linter
+# Backend (debug mode on port 9229, server on port 3000)
+cd backend && npm run dev
+
+# Frontend (Vite dev server on port 7772)
+cd frontend && npm run dev
 ```
 
-### Environment Variables
+**Important**: Backend must run for frontend API calls (`/api/*`) to work. The backend task runs with `nodemon --inspect=9229` for debugging.
 
-**Backend** (`.env`):
-- `PORT` (default 3000)
-- `SHEETDB_URL` - SheetDB endpoint for order persistence
-- `BOT_TOKEN` - Telegram bot token
-- `DRIVERS_CHAT`, `ADMIN_CHAT` - Telegram chat IDs for notifications
-- `ROBOKASSA_LOGIN`, `ROBOKASSA_PASS1` - Payment processor credentials
+### Build & Lint
+```bash
+# Both packages use Biome for linting/formatting
+backend: npm run lint        # --unsafe flag allows unsafe fixes
+backend: npm run build       # TypeScript → CommonJS in dist/
+frontend: npm run lint
+frontend: npm run build      # Vite bundle output
+```
 
-**Frontend** (proxy in `vite.config.js`):
-- Backend API available at `/api` (proxied to http://localhost:3000)
+---
 
-## Code Patterns & Conventions
+## Project-Specific Patterns
 
-### Biome (Linter/Formatter)
-- Both frontend & backend use **Biome 2.3.7** with git integration
-- Run `npm run lint` in either directory (applies unsafe fixes automatically)
-- Double quotes for strings, 2-space indent
+### TypeScript + CommonJS Backend
+- **Config**: `tsconfig.json` targets ES5, CommonJS modules (not ESNext)
+- **Services pattern**: `backend/src/services/` are pure utility modules (SheetDB, Telegram) with no Express dependencies—easy to test
+- **Routes pattern**: `backend/src/routes/` are Express routers that delegate to services
 
-### TypeScript (Backend Only)
-- Target: ES5, Module: CommonJS (specified in `tsconfig.json`)
-- `strict: true` - strict null checks enabled
-- All external functions use `any` type (loose typing for external APIs)
+### Frontend: URL-Based Navigation
+- **Order link format**: `/order?rowNum-orderCode` (used in Telegram messages)
+- **Route link format**: `/route?rowNum-orderCode` (for driver bid confirmation)
+- **Parsing in order.js**: `location.search.replace("?", "").split("-")` extracts rowNum and orderCode
+- **Auto-fill feature**: `tryFillDriverFields()` searches all orders for the driver's Telegram ID to repopulate form fields from prior responses
 
-### Frontend State Management
-- **No frameworks** - vanilla JS with global variables
-- HTML has inline `onclick` handlers wired to window-scoped functions
-- CSS classes toggle visibility (`.hidden`, `.active`, `.disabled`, `.selected`)
+### Commission & Financial Logic
+- **Frontend responsibility**: Calculate and store `cost_with_com` when driver submits bid (`order.js`)
+- **Backend responsibility**: Include `cost_with_com` in both client and admin Telegram notifications
+- **Currency**: All amounts in ₽ (rubles); no currency conversion needed
 
-### API Contracts
+### Environment Variables (Required)
+- `SHEETDB_URL`: SheetDB REST endpoint for the orders spreadsheet
+- `BOT_TOKEN`: Telegram bot token
+- `DRIVERS_CHAT`, `ADMIN_CHAT`: Telegram chat IDs (fallback to order fields if not set)
+- `PORT`: Server port (default 3000)
 
-**`POST /api/create-order`** - Order creation
-- Input: Full order object (from frontend)
-- Output: `{ success: true, order_code, row_number }`
-- Side effects: SheetDB write + 3 Telegram notifications
+---
 
-**`POST /api/payment-link`** - Robokassa payment
-- Input: `{ amount, orderId }`
-- Output: `{ url }` - direct to Robokassa merchant page
+## Code Standards & Tools
 
-### Cost Calculation Logic
-- **Base cost** = distance_km × price_per_km (eco: 75, opti: 105, maxi: 150)
-- **Below 800₽**: Fixed 800₽ minimum (includes acquiring/service fees)
-- **800₽+**: Add 10.5% acquiring + 10.5% service fee
-- **Driver gets**: Base cost (no fee deduction)
+### Code Quality
+- **Linter/Formatter**: Biome (version 2.3.7) — run `npm run lint` before commits
+- **JavaScript style**: Double quotes (Biome config enforced), HTML parse mode for Telegram messages
+- **Error logging**: Console logs with status emoji (✓, ✗) for visibility; always log to console AND return JSON errors to client
 
-## Critical Files to Know
+### Testing & Debugging
+- **Backend debugging**: Attach debugger to port 9229 (VS Code launch config or Chrome DevTools)
+- **Frontend debugging**: Browser DevTools; check `/api/*` calls in Network tab for backend response status
+- **Common issues**:
+  - SheetDB returns empty array → order not found (check order_code spelling)
+  - Telegram notification fails silently → validate BOT_TOKEN and chat IDs exist
 
-| File | Purpose |
-|------|---------|
-| `backend/src/app.ts` | Server bootstrap & middleware |
-| `backend/src/routes/orders.ts` | Order creation logic & flow |
-| `backend/src/services/telegram.ts` | Multi-recipient notifications (see message formatting) |
-| `frontend/src/scripts/drive.js` | All frontend logic (~800 lines) |
-| `frontend/vite.config.js` | Dev proxy config & build setup |
+---
 
-## Known Issues & TODOs
+## File Organization
 
-- **Order validation**: No price validation on backend (client can manipulate costs)
-- **Row number**: `findOrderRowNumber()` always returns null (SheetDB limitation?)
-- **Tariff availability**: Hard-coded logic based on trip date (see `checkTariffAvailability()`)
+```
+backend/src/
+├── app.ts                    # Express setup, middleware, route imports
+├── routes/
+│   ├── orders.ts            # POST/GET/PATCH /api/orders* — order CRUD
+│   ├── payment.ts           # POST /api/payment-link — Robokassa signature
+│   └── telegram.ts          # POST /api/telegram — driver response notifications
+└── services/
+    ├── sheetdb.ts           # SheetDB fetch wrapper, all CRUD operations
+    └── telegram.ts          # Telegram message composition & sending
 
-## Integration Points
+frontend/src/
+├── scripts/
+│   ├── order.js             # Driver bid form, order status validation, auto-fill
+│   ├── drive.js             # Client order creation (not detailed in analysis)
+│   └── route.js             # Order confirmation UI (not detailed in analysis)
+└── styles/
+    └── *.css                # Linked in HTML files
+```
 
-1. **SheetDB**: Spreadsheet-based data store (SHEETDB_URL env var)
-2. **Telegram Bot**: Three separate chat notifications (client, drivers, admin)
-3. **Nominatim API**: Free geolocation/reverse-geocoding (OpenStreetMap)
-4. **Robokassa**: Payment processor (Russian-only, MD5 signature required)
+---
 
-## Debugging Tips
+## When Adding Features
 
-- Backend: Enable `--inspect=9229` in `nodemon.json` for Chrome DevTools debugging
-- Frontend: Vite dev server at http://localhost:7772 with hot reload
-- API calls: Check browser console & backend logs for `/api/create-order` flow
-- Telegram: Verify BOT_TOKEN and chat IDs are set (warnings logged if missing)
+1. **New order fields?** Update SheetDB schema (Google Sheet columns), then add fetch logic in `sheetdb.ts`
+2. **New Telegram notification type?** Add function in `backend/src/services/telegram.ts`, export, and call from appropriate route
+3. **New API endpoint?** Create route in `backend/src/routes/`, import in `app.ts`, follow `/api/*` naming pattern
+4. **Frontend UI changes?** Modify corresponding `.html` and `.js` in `frontend/src/` (this is vanilla JS, not a framework)
+5. **Business rule changes (status, commission)?** Search for hardcoded values and comments (e.g., "21%", "ОЖИДАНИЕ_ОТКЛИКОВ") to find all affected sites
+
+---
+
+## Notes for AI Agents
+
+- **No abstraction over-engineering**: This codebase intentionally uses direct HTTP calls and console logging for simplicity
+- **Cyrillic strings are intentional**: UI and status names in Russian—preserve them exactly
+- **Robokassa integration** (payment.ts) is currently minimal; payment verification webhook is not implemented
+- **Row number fetching disabled**: `findOrderRowNumber()` is coded but commented out; SheetDB row API returns null consistently
+- **Frontend is HTML+JS**: No build step for frontend JS—changes in `drive.js`, `order.js`, `route.js` are immediately reflected after browser refresh (Vite in dev mode)
