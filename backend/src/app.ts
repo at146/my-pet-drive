@@ -6,6 +6,7 @@ dotenv.config();
 
 import ordersRouter from "./routes/orders";
 import paymentRouter from "./routes/payment";
+import telegramRouter from "./routes/telegram";
 
 const app = express();
 const corsMiddleware = cors();
@@ -17,6 +18,7 @@ app.use(jsonMiddleware);
 // Routes
 app.use("/api", ordersRouter);
 app.use("/api", paymentRouter);
+app.use("/api", telegramRouter);
 
 // Start server
 const PORT = process.env.PORT || 3000;

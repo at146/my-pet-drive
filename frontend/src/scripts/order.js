@@ -1,6 +1,5 @@
 const CONFIG = {
   SHEETDB_URL: "https://sheetdb.io/api/v1/pjrkb7sw0hmdm",
-  BOT_TOKEN: "7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo",
   ADMIN_CHAT: "209183016",
   DRIVERS_CHAT: "-1001905857177",
   COMMISSION_RATE: 0.21, // 21% комиссия
@@ -272,78 +271,19 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
 });
 
 async function sendNotif(resp) {
-  const bot = `https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`;
-  const link = `https://xn--80ahcabg2akskmd2q.xn--p1ai/route?${rowNum}-${orderCode}`;
-
-  // Для клиента: первое имя водителя, марка авто, комментарий и стоимость с комиссией 21%
-  let clientMsg =
-    `<b>Новый отклик по заказу №${orderCode}</b>
-` +
-    `Водитель: ${resp.first_name}
-` +
-    `Марка авто: ${resp.car_brand || "—"}
-` +
-    `Комментарий: ${resp.comment || "—"}
-` +
-    `Сумма с комиссией: ${resp.cost_with_com}₽
-` +
-    `<a href="${link}">Подтвердить предложение</a>`;
-
-  fetch(bot, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: order.telegram_id,
-      text: clientMsg,
-      parse_mode: "HTML",
-    }),
-  });
-
-  // Для админа: полная разбивка с использованием cost_with_com
-  let adminPaying = Math.round(resp.bid * 0.105);
-  let adminFactProfit = Math.round(resp.bid * 0.105);
-
-  let adminMsg =
-    `<b>Отклик по заказу №${orderCode}</b>
-` +
-    `Водитель: ${resp.first_name}
-` +
-    `Телефон: ${resp.phone}
-` +
-    `Марка: ${resp.car_brand}
-` +
-    `Номер: ${resp.car_num}
-` +
-    `Цвет: ${resp.car_color}
-` +
-    `Сумма предложения (драйвер): ${resp.bid}₽
-` +
-    `Стоимость с комиссией 21%: ${resp.cost_with_com}₽
-` +
-    `— Эквайринг 10,5%: ${adminPaying}₽
-` +
-    `— Факт. доход 10,5%: ${adminFactProfit}₽`;
-
-  fetch(bot, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: CONFIG.ADMIN_CHAT,
-      text: adminMsg,
-      parse_mode: "HTML",
-    }),
-  });
-
-  // Для чата водителей: стандартно
-  fetch(bot, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: CONFIG.DRIVERS_CHAT,
-      text: `По заказу №${orderCode} +1 новый отклик`,
-      parse_mode: "HTML",
-    }),
-  });
+  try {
+    await fetch(`/api/telegram`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order_code: orderCode,
+        row_number: rowNum,
+        resp,
+      }),
+    });
+  } catch (err) {
+    console.error("Failed to send driver notification via backend:", err);
+  }
 }
 
 window.onTelegramAuth = onTelegramAuth;
