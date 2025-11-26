@@ -1,0 +1,21 @@
+services:
+  backend:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    build:
+      context: ./backend
+    # restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - SHEETDB_URL=https://sheetdb.io/api/v1/pjrkb7sw0hmdm
+      - BOT_TOKEN=7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo
+      - DRIVERS_CHAT=-1001905857177
+      - ADMIN_CHAT=209183016
+
+  frontend:
+    image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
+    build:
+      context: ./frontend
+    # restart: always
+    ports:
+      - "8080:80"
