@@ -11,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "sourceMap": true
+    // "sourceMap": true // Create source map files for emitted JavaScript files. default false
   }
 }
