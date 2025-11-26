@@ -155,7 +155,7 @@ async function tryFillDriverFields() {
     let lastDriverData = null;
 
     for (let i = allData.length - 1; i >= 0; i--) {
-      let row = allData[i];
+      const row = allData[i];
       if (!row.driver_responses || row.driver_responses === "[]") continue;
 
       let respArr;
@@ -167,7 +167,7 @@ async function tryFillDriverFields() {
 
       if (Array.isArray(respArr)) {
         for (let j = respArr.length - 1; j >= 0; j--) {
-          let resp = respArr[j];
+          const resp = respArr[j];
           if (resp.telegram_id === driver.id) {
             lastDriverData = resp;
             break;

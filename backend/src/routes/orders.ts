@@ -76,7 +76,7 @@ router.get("/orders/:orderCode", async (req, res) => {
  * GET /api/orders
  * Returns all orders from SheetDB
  */
-router.get("/orders", async (req, res) => {
+router.get("/orders", async (_req, res) => {
   try {
     const orders = await getAllOrders();
     return res.json(orders);

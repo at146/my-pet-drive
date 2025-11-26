@@ -1,7 +1,7 @@
 // Global state
 let userData = null;
 let map = null;
-let routeData = { departure: "", destination: "", distance: 0, coords: {} };
+const routeData = { departure: "", destination: "", distance: 0, coords: {} };
 let selectedTariff = null;
 let markers = [];
 let orderCodeGlobal = "";
