@@ -186,7 +186,7 @@ function driverUI() {
 function cancelUI() {
   if (order.status === "ОТМЕНА") {
     document.getElementById("cancel").classList.remove("hidden");
-    let reason = (order.cancel_wtf || "").split(";")[0].trim();
+    const reason = (order.cancel_wtf || "").split(";")[0].trim();
     document.getElementById("cancel-reason").textContent = reason
       ? reason
       : "Причина не указана";
@@ -242,7 +242,7 @@ function cancelLogicUI() {
   const vis = (v, el) => {
     el.classList[v ? "remove" : "add"]("hidden");
   };
-  let btns = document.getElementById("cancel-btns"),
+  const btns = document.getElementById("cancel-btns"),
     cancelInit = document.getElementById("cancel-init"),
     cancelForm = document.getElementById("cancel-form"),
     cancelFinal = document.getElementById("cancel-final"),
@@ -267,12 +267,12 @@ function cancelLogicUI() {
       }),
   );
   cancelFinal.onclick = async () => {
-    let reason = cancelInput.value || "";
+    const reason = cancelInput.value || "";
     if (!reason.trim()) {
       cancelInput.style.borderColor = "red";
       return;
     } else cancelInput.style.borderColor = "#ccc";
-    let payload = {
+    const payload = {
       status: "ОТМЕНА",
       cancel_wtf: `${reason}; ${new Date().toLocaleString("ru-RU")}`,
     };
