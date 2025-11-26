@@ -5,7 +5,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        drive: resolve(__dirname, 'drive.html')
+        drive: resolve(__dirname, 'drive.html'),
+        route: resolve(__dirname, 'route.html'),
+        order: resolve(__dirname, 'order.html')
       }
     }
   },
