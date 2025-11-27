@@ -7,6 +7,17 @@ let markers = [];
 let orderCodeGlobal = "";
 let rowNumberGlobal = "";
 let userIP = "";
+
+const botLogin = import.meta.env.VITE_TELEGRAM_BOT_LOGIN;
+const script = document.createElement("script");
+script.src = "https://telegram.org/js/telegram-widget.js?22";
+script.async = true;
+script.setAttribute("data-telegram-login", botLogin);
+script.setAttribute("data-size", "large");
+script.setAttribute("data-onauth", "handleTelegramAuth(user)");
+script.setAttribute("data-request-access", "write");
+document.getElementById("telegram-login-container").appendChild(script);
+
 // Get user IP
 async function getUserIP() {
   try {
