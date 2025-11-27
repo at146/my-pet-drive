@@ -1,5 +1,9 @@
 # My Pet Drive
 
+## TODO
+
+Админу можно отправить любой текст - поправить sendConfirmNotif и sendCancelNotif в [route.js](./frontend/src/scripts/route.js)
+
 ## Traefik
 
 ```bash

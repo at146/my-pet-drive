@@ -22,7 +22,6 @@ const router = Router();
  */
 router.post("/orders", async (req, res) => {
   try {
-    // TODO: сделать защиту от подмены цены клиентом
     const order = req.body;
     if (
       !order ||
