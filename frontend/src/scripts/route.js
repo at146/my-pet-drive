@@ -1,7 +1,3 @@
-const CONF = {
-  MERCHANT: "Petsit",
-  PASS1: "ejY7rDzZWA77Lk27mLrI",
-};
 const p = location.search.replace("?", "").split("-");
 if (p.length !== 2) {
   alert("Неверная ссылка");
@@ -38,7 +34,7 @@ async function loadOrder() {
       order.driver_cost_with_com =
         order.driver_cost_with_com || sel.cost_with_com;
     }
-    render();
+    await render();
   } catch (e) {
     console.error(e);
   }
@@ -46,7 +42,7 @@ async function loadOrder() {
 loadOrder();
 setInterval(loadOrder, 10000);
 
-function render() {
+async function render() {
   el("route", `${order.departure_address} → ${order.destination_address}`);
   el("dist", order.distance_km);
   el("pet", `${order.animal_type}, ${order.weight_kg} кг`);
@@ -56,7 +52,7 @@ function render() {
   else updateMap();
   statusUI();
   bidsUI();
-  driverUI();
+  await driverUI();
   cancelUI();
   cancelLogicUI();
 }
@@ -151,7 +147,7 @@ function bidsUI() {
   } else box.classList.add("hidden");
 }
 
-function driverUI() {
+async function driverUI() {
   const box = document.getElementById("driver"),
     payBtn = document.getElementById("pay-btn");
   if (
@@ -174,7 +170,14 @@ function driverUI() {
       payBtn.classList.remove("hidden");
       payBtn.onclick = order.payment_url
         ? () => window.open(order.payment_url, "_blank")
-        : createPayment;
+        : async () => {
+            try {
+              await createPayment();
+            } catch (e) {
+              console.error(e);
+              alert("Ошибка при создании платежа");
+            }
+          };
     } else {
       payBtn.classList.add("hidden");
     }
@@ -383,46 +386,26 @@ async function sendConfirmNotif(drv) {
   }
 }
 
-function createPayment() {
-  // TODO: вынести в backend
+async function createPayment() {
   const sum = parseFloat(order.driver_cost_with_com || order.driver_bid || 0);
   if (!sum) {
     alert("Ставка водителя не указана");
     return;
   }
-  const outSum = sum.toFixed(2);
-  const invId = Math.floor(1e9 + Math.random() * 9e9);
-  const desc = "Поездка в зоотакси MyPetDrive";
-  const receiptObj = {
-    sno: "usn_income",
-    items: [
-      {
-        name: desc,
-        quantity: 1,
-        sum: sum,
-        payment_method: "full_payment",
-        payment_object: "service",
-        tax: "none",
-      },
-    ],
-  };
-  const receipt = JSON.stringify(receiptObj);
-  const shpParam = `Shp_code=${CODE}`;
-  const signStr = `${CONF.MERCHANT}:${outSum}:${invId}:${receipt}:${CONF.PASS1}:${shpParam}`;
-  const signVal = CryptoJS.MD5(signStr).toString();
-  const url = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${
-    CONF.MERCHANT
-  }&OutSum=${outSum}&InvId=${invId}&Description=${encodeURIComponent(
-    desc,
-  )}&${shpParam}&Receipt=${encodeURIComponent(
-    receipt,
-  )}&SignatureValue=${signVal}`;
-  fetch(`/api/orders/${CODE}`, {
+  const response = await fetch("/api/payment/payment-link", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sum: sum, orderId: CODE }),
+  });
+
+  const data = await response.json();
+
+  await fetch(`/api/orders/${CODE}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ payment_url: url }),
+    body: JSON.stringify({ payment_url: data.url }),
   });
-  window.open(url, "_blank");
+  window.open(data.url, "_blank");
 }
 
 window.confirmDriver = confirmDriver;
