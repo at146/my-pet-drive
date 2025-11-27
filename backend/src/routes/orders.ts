@@ -15,6 +15,8 @@ import { notifyAll } from "../services/telegram";
 const router = Router();
 
 /**
+ * POST /api/orders
+ * body: { ...order data... }
  * Endpoint to create a full order.
  * Expects the frontend to send the same object that was previously posted directly to SheetDB.
  */
@@ -22,11 +24,19 @@ router.post("/orders", async (req, res) => {
   try {
     // TODO: сделать защиту от подмены цены клиентом
     const order = req.body;
-    if (!order || Object.keys(order).length === 0) {
+    if (
+      !order ||
+      Object.keys(order).length === 0 ||
+      (order.tariff !== "eco" &&
+        order.tariff !== "opti" &&
+        order.tariff !== "maxi")
+    ) {
       return res.status(400).json({ error: "Invalid order payload" });
     }
 
     const routeData = JSON.parse(order.routeData);
+    const userData = JSON.parse(order.userData);
+
     order.order_code = generateOrderCode();
     const timestamp = new Date().toISOString();
     order.created_at = timestamp;
@@ -35,10 +45,10 @@ router.post("/orders", async (req, res) => {
     const costs = calculateCost(order.tariff, routeData.distance);
     order.total_cost = costs.totalCost;
     order.driver_cost = costs.driverCost;
-    order.telegram_id = order.userData.id;
-    order.client_name = order.userData.first_name;
-    order.client_username = order.userData.username || "";
-    order.approve = `✓ ; ${timestamp} ; ${order.userIP} ; ${order.userData.id}`;
+    order.telegram_id = userData.id;
+    order.client_name = userData.first_name;
+    order.client_username = userData.username || "";
+    order.approve = `✓ ; ${timestamp} ; ${order.userIP} ; ${userData.id}`;
     order.driver_responses = "[]";
     order.status = "ОЖИДАНИЕ_ОТКЛИКОВ";
     order.departure_address = routeData.departure;
@@ -84,7 +94,13 @@ router.post("/orders", async (req, res) => {
 router.post("/orders/calculate-cost", (req, res) => {
   try {
     const { tariff, distance_km } = req.body;
-    if (!tariff || !distance_km) {
+    if (
+      !tariff ||
+      !distance_km ||
+      tariff === "" ||
+      distance_km === "" ||
+      (tariff !== "eco" && tariff !== "opti" && tariff !== "maxi")
+    ) {
       return res.status(400).json({ error: "Missing tariff or distance_km" });
     }
 
@@ -113,7 +129,7 @@ router.post("/orders/update-tariff-costs", async (req, res) => {
 });
 
 /**
- * GET /api/order/:orderCode
+ * GET /api/orders/:orderCode
  * Returns a single order by order_code
  */
 router.get("/orders/:orderCode", async (req, res) => {

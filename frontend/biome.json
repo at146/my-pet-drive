@@ -6,7 +6,12 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!!**/dist"]
+    "includes": [
+      "**",
+      "!!**/dist",
+      "!**/node_modules/**/*",
+      "!**/vite.config.js"
+    ]
   },
   "formatter": {
     "enabled": true,

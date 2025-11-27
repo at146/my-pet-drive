@@ -20,7 +20,6 @@ async function loadOrder() {
     if (!order.status || order.status === "СОЗДАН" || order.status === "") {
       order.status = "ОЖИДАНИЕ_ОТКЛИКОВ";
     }
-    // TODO: почему не парсится
     if (order.driver_select) {
       const sel = JSON.parse(order.driver_select);
       order.driver_first_name = order.driver_first_name || sel.first_name;

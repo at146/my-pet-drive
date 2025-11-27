@@ -16,7 +16,9 @@ export function calculateCost(
 ) {
   const prices = { eco: 75, opti: 105, maxi: 150 };
   const baseCost = distance * prices[selectedTariff];
-  let totalCost, driverCost, shortDistanceFee;
+  let totalCost: number;
+  let driverCost: number;
+  let shortDistanceFee: number;
   if (baseCost < 800) {
     // Минимальная подача 800₽ (уже с включённой комиссией 21%)
     shortDistanceFee = 800 - baseCost;
