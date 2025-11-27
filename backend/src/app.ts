@@ -1,8 +1,9 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import path from "path";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), "..", ".env") });
 
 import ordersRouter from "./routes/orders";
 import paymentRouter from "./routes/payment";
