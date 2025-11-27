@@ -4,6 +4,9 @@ services:
     build:
       context: ./backend
     # restart: always
+    networks:
+      - traefik-public
+      - default
     environment:
       - SHEETDB_URL=https://sheetdb.io/api/v1/pjrkb7sw0hmdm
       - BOT_TOKEN=7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo
@@ -32,6 +35,9 @@ services:
     build:
       context: ./frontend
     # restart: always
+    networks:
+      - traefik-public
+      - default
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
