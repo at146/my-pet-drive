@@ -7,6 +7,16 @@ let order = null;
 let map,
   markers = [];
 
+const botLogin = import.meta.env.VITE_TELEGRAM_BOT_LOGIN;
+const script = document.createElement("script");
+script.src = "https://telegram.org/js/telegram-widget.js?22";
+script.async = true;
+script.setAttribute("data-telegram-login", botLogin);
+script.setAttribute("data-size", "large");
+script.setAttribute("data-onauth", "onTelegramAuth(user)");
+script.setAttribute("data-request-access", "write");
+document.getElementById("telegram-login-container").appendChild(script);
+
 function onTelegramAuth(u) {
   driver = u;
   document.getElementById("tg-auth").classList.add("hidden");

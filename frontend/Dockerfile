@@ -8,6 +8,9 @@ COPY package*.json /app/
 RUN npm ci
 
 COPY . /app/
+
+ARG VITE_TELEGRAM_BOT_LOGIN=${VITE_TELEGRAM_BOT_LOGIN}
+
 RUN npm run build
 
 # ---------- Runner ----------
