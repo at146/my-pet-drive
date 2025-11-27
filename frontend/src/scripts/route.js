@@ -361,7 +361,7 @@ async function sendConfirmNotif(drv) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: drv.telegram_id,
-        text: `✅ Вы выбраны для заказа №${order.order_code}!\n\n Клиент: ${order.client_name}\n Маршрут:\n${order.departure_address} → ${order.destination_address}\n ДИСТАНЦИЯ: ${order.distance_km} км\n Питомец: ${order.animal_type}, ${order.weight_kg} кг\n Дата и время: ${order.trip_date} в ${order.trip_time}\n\n Ваша оплата: ${drv.bid}₽\n\n⏳ Ожидайте оплаты от клиента.\nКонтактные данные будут доступны после оплаты.`,
+        text: `✅ Вы выбраны для заказа №${order.order_code}!\n\nКлиент: ${order.client_name}\nМаршрут:\n${order.departure_address} → ${order.destination_address}\nДИСТАНЦИЯ: ${order.distance_km} км\nПитомец: ${order.animal_type}, ${order.weight_kg} кг\nДата и время: ${order.trip_date} в ${order.trip_time}\n\nВаша оплата: ${drv.bid}₽\n\n⏳ Ожидайте оплаты от клиента.\nКонтактные данные будут доступны после оплаты.`,
       }),
     });
     // ТГ админу
@@ -369,7 +369,7 @@ async function sendConfirmNotif(drv) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: `✅ Водитель выбран для заказа №${order.order_code}\n\n Клиент: ${order.client_name} (@${order.client_username})\n Водитель: ${drv.first_name} (@${drv.username})\n\n Ставка водителя: ${drv.bid} ₽\n Стоимость заказа: ${drv.cost_with_com} ₽\n ${order.departure_address} → ${order.destination_address}\n\n⏳ Ожидание оплаты`,
+        text: `✅ Водитель выбран для заказа №${order.order_code}\n\nКлиент: ${order.client_name} (@${order.client_username})\nВодитель: ${drv.first_name} (@${drv.username})\n\nСтавка водителя: ${drv.bid} ₽\nСтоимость заказа: ${drv.cost_with_com} ₽\n${order.departure_address} → ${order.destination_address}\n\n⏳ Ожидание оплаты`,
       }),
     });
     // ТГ драйвер-чат
