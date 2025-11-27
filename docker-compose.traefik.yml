@@ -31,8 +31,8 @@ services:
       # traefik-http set up only to use the middleware to redirect to https
       - traefik.http.routers.traefik-dashboard-http.middlewares=https-redirect
       # admin-auth middleware with HTTP Basic auth
-      # Using the environment variables USERNAME and HASHED_PASSWORD
-      - traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME?Variable not set}:${HASHED_PASSWORD?Variable not set}
+      # Using the environment variables USER_NAME and HASHED_PASSWORD
+      - traefik.http.middlewares.admin-auth.basicauth.users=${USER_NAME?Variable not set}:${HASHED_PASSWORD?Variable not set}
       # Enable HTTP Basic auth, using the middleware created above
       - traefik.http.routers.traefik-dashboard-https.middlewares=admin-auth
     volumes:
