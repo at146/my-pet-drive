@@ -8,10 +8,10 @@ services:
       - traefik-public
       - default
     environment:
-      - SHEETDB_URL=https://sheetdb.io/api/v1/pjrkb7sw0hmdm
-      - BOT_TOKEN=7287717757:AAEWkHMn6_qTdtjmA1QeWkwUXhk1WJ9Uowo
-      - DRIVERS_CHAT=-1001905857177
-      - ADMIN_CHAT=209183016
+      - SHEETDB_URL=${SHEETDB_URL?Variable not set}
+      - BOT_TOKEN=${BOT_TOKEN?Variable not set}
+      - DRIVERS_CHAT=${DRIVERS_CHAT?Variable not set}
+      - ADMIN_CHAT=${ADMIN_CHAT?Variable not set}
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
