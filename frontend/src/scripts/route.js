@@ -39,6 +39,7 @@ async function loadOrder() {
   }
 }
 loadOrder();
+// TODO: убрать setInterval после реализации WebSocket
 setInterval(loadOrder, 10000);
 
 async function render() {
