@@ -51,10 +51,6 @@ function applyPhoneMask(input) {
   }
   input.value = formatted;
 }
-// Strip phone to numeric format
-function stripPhone(phone) {
-  return phone.replace(/\D/g, "");
-}
 // Add comment suggestion
 function addCommentSuggestion(text) {
   const commentField = document.getElementById("driver-comment");
@@ -128,7 +124,7 @@ function handleTelegramAuth(user) {
   document.getElementById("trip-date").min = today;
 }
 // Navigation
-function goToStep(step) {
+async function goToStep(step) {
   // Hide all steps
   document
     .querySelectorAll(".step")
@@ -150,7 +146,7 @@ function goToStep(step) {
   }
   // Update summary if going to step 4
   if (step === 4) {
-    updateSummary();
+    await updateSummary();
   }
 }
 // Get Current Location
@@ -296,7 +292,7 @@ function showMap() {
   });
 }
 // Select Tariff
-function selectTariff(tariff) {
+async function selectTariff(tariff) {
   // Check if tariff is disabled
   const tariffCard = document.getElementById(`tariff-${tariff}`);
   if (tariffCard.classList.contains("disabled")) {
@@ -308,7 +304,7 @@ function selectTariff(tariff) {
     .forEach((c) => c.classList.remove("selected"));
   document.querySelector(`[data-tariff="${tariff}"]`).classList.add("selected");
   document.getElementById("next-to-step-4").disabled = false;
-  calculateCost();
+  await calculateCost();
 }
 // Update Tariff Costs
 function updateTariffCosts() {
@@ -319,35 +315,40 @@ function updateTariffCosts() {
   });
 }
 // ====== ЗАМЕНИТЬ СТАРУЮ calculateCost() ЭТИМ КОДОМ ======
-function calculateCost() {
+async function calculateCost() {
   if (!selectedTariff) return;
-  const prices = { eco: 75, opti: 105, maxi: 150 };
-  const baseCost = routeData.distance * prices[selectedTariff];
-  let totalCost, driverCost, shortDistanceFee;
-  if (baseCost < 800) {
-    // Минимальная подача 800₽ (уже с включённой комиссией 21%)
-    shortDistanceFee = 800 - baseCost;
-    totalCost = 800; // Фиксированная сумма
-    driverCost = 632; // 79% от 800₽
+  const response = await fetch(`/api/orders/calculate-cost`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tariff: selectedTariff,
+      distance_km: routeData.distance,
+    }),
+  });
+  if (!response.ok) {
+    const txt = await response.text();
+    throw new Error(`Backend error: ${response.status} ${txt}`);
+  }
+  const respData = await response.json();
+
+  const totalCost = respData.totalCost;
+  const driverCost = respData.driverCost;
+  const shortDistanceFee = respData.shortDistanceFee;
+
+  if (respData.baseCost < 800) {
     document.getElementById("short-distance-notice").classList.remove("hidden");
     document.getElementById("short-distance-fee").textContent =
-      shortDistanceFee;
+      respData.shortDistanceFee;
   } else {
-    // Обычный расчёт для поездок от 800₽
-    shortDistanceFee = 0;
-    const acquiring = Math.round(baseCost * 0.105); // 10.5%
-    const service = Math.round(baseCost * 0.105); // 10.5%
-    totalCost = baseCost + acquiring + service;
-    driverCost = baseCost;
     document.getElementById("short-distance-notice").classList.add("hidden");
   }
-  document.getElementById("total-cost").textContent = totalCost;
-  document.getElementById("driver-cost").textContent = driverCost;
+  document.getElementById("total-cost").textContent = respData.totalCost;
+  document.getElementById("driver-cost").textContent = respData.driverCost;
   return { totalCost, driverCost, shortDistanceFee };
 }
 // Update Summary
-function updateSummary() {
-  const costs = calculateCost();
+async function updateSummary() {
+  const costs = await calculateCost();
   document.getElementById("summary-route").textContent =
     `${routeData.departure} → ${routeData.destination} (${routeData.distance} км)`;
   document.getElementById("summary-pet").textContent = `${
@@ -374,33 +375,18 @@ async function submitOrder() {
   btn.disabled = true;
   btn.textContent = "⏳ Отправка заказа...";
   try {
-    const orderCode = generateOrderCode();
-    orderCodeGlobal = orderCode;
-    const costs = calculateCost();
-    const timestamp = new Date().toISOString();
-    const phoneStripped = stripPhone(document.getElementById("phone").value);
     const orderData = {
-      order_code: orderCode,
-      telegram_id: userData.id,
-      client_name: userData.first_name,
-      client_username: userData.username || "",
-      client_phone: phoneStripped,
-      departure_address: routeData.departure,
-      destination_address: routeData.destination,
-      distance_km: routeData.distance,
+      client_phone: document.getElementById("phone").value,
       animal_type: document.getElementById("animal-type").value,
       breed: document.getElementById("breed").value || "",
       weight_kg: parseFloat(document.getElementById("weight").value) || 0,
       trip_date: document.getElementById("trip-date").value,
       trip_time: document.getElementById("trip-time").value,
       tariff: selectedTariff,
-      total_cost: costs.totalCost,
-      driver_cost: costs.driverCost,
       mssg_cl: document.getElementById("driver-comment").value || "",
-      status: "ОЖИДАНИЕ_ОТКЛИКОВ",
-      created_at: timestamp,
-      driver_responses: "[]",
-      approve: `✓ ; ${timestamp} ; ${userIP} ; ${userData.id}`,
+      userIP: userIP,
+      userData: JSON.stringify(userData),
+      routeData: JSON.stringify(routeData),
     };
     console.log("Sending order to backend:/api/orders", orderData);
     // Send to backend which will store in SheetDB and notify Telegram
@@ -416,10 +402,12 @@ async function submitOrder() {
     const respData = await response.json();
     const rowNumber = respData.row_number || 1;
     rowNumberGlobal = rowNumber;
+    orderCodeGlobal = respData.order_code;
     console.log("✓ Order created via backend:", respData);
     // Show success
-    document.getElementById("order-code-display").textContent = orderCode;
-    goToStep(5);
+    document.getElementById("order-code-display").textContent =
+      respData.order_code;
+    await goToStep(5);
     // Start countdown for redirect
     startRedirectCountdown();
   } catch (error) {
@@ -447,15 +435,6 @@ function goToOrderPage() {
   if (orderCodeGlobal && rowNumberGlobal) {
     window.location.href = `/route?${rowNumberGlobal}-${orderCodeGlobal}`;
   }
-}
-// Generate Order Code
-function generateOrderCode() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 5; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
 }
 // Event listeners
 document.addEventListener("DOMContentLoaded", () => {

@@ -1,5 +1,10 @@
 import { Router } from "express";
 import {
+  calculateCost,
+  generateOrderCode,
+  stripPhone,
+} from "../services/order";
+import {
   createSheetOrder,
   getAllOrders,
   getOrderByCode,
@@ -17,9 +22,28 @@ router.post("/orders", async (req, res) => {
   try {
     // TODO: сделать защиту от подмены цены клиентом
     const order = req.body;
-    if (!order || !order.order_code) {
+    if (!order || Object.keys(order).length === 0) {
       return res.status(400).json({ error: "Invalid order payload" });
     }
+
+    const routeData = JSON.parse(order.routeData);
+    order.order_code = generateOrderCode();
+    const timestamp = new Date().toISOString();
+    order.created_at = timestamp;
+    const phoneStripped = stripPhone(order.client_phone);
+    order.client_phone = phoneStripped;
+    const costs = calculateCost(order.tariff, routeData.distance);
+    order.total_cost = costs.totalCost;
+    order.driver_cost = costs.driverCost;
+    order.telegram_id = order.userData.id;
+    order.client_name = order.userData.first_name;
+    order.client_username = order.userData.username || "";
+    order.approve = `✓ ; ${timestamp} ; ${order.userIP} ; ${order.userData.id}`;
+    order.driver_responses = "[]";
+    order.status = "ОЖИДАНИЕ_ОТКЛИКОВ";
+    order.departure_address = routeData.departure;
+    order.destination_address = routeData.destination;
+    order.distance_km = routeData.distance;
 
     // Save to SheetDB
     await createSheetOrder(order);
@@ -45,6 +69,42 @@ router.post("/orders", async (req, res) => {
       success: true,
       order_code: order.order_code,
       row_number: rowNumber,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/**
+ * POST /api/orders/calculate-cost
+ * body: { tariff, distance_km }
+ * Returns calculated cost based on tariff and distance
+ */
+router.post("/orders/calculate-cost", (req, res) => {
+  try {
+    const { tariff, distance_km } = req.body;
+    if (!tariff || !distance_km) {
+      return res.status(400).json({ error: "Missing tariff or distance_km" });
+    }
+
+    const costs = calculateCost(tariff, distance_km);
+    return res.json(costs);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/orders/update-tariff-costs", async (req, res) => {
+  try {
+    const { distance_km } = req.body;
+    if (!distance_km) {
+      return res.status(400).json({ error: "Missing distance_km" });
+    }
+
+    return res.json({
+      success: true,
     });
   } catch (err) {
     console.error(err);

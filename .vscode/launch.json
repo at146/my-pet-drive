@@ -8,8 +8,8 @@
         "name": "Launch Chrome",
         "request": "launch",
         "type": "chrome",
-        // "url": "http://localhost:7772/",
-        "url": "https://equal-tick-mutually.ngrok-free.app/drive",
+        "url": "http://localhost:7772/drive",
+        // "url": "https://equal-tick-mutually.ngrok-free.app/drive",
         "webRoot": "${workspaceFolder}/frontend"
       },
       {

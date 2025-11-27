@@ -14,6 +14,11 @@ export default defineConfig({
   },
   server: {
     allowedHosts: ['equal-tick-mutually.ngrok-free.app'],
+    hmr: false,
+    // watch: {
+    //   persistent: false,
+    //   usePolling: false
+    // },
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
