@@ -40,7 +40,7 @@ async function loadOrder() {
 }
 loadOrder();
 // TODO: убрать setInterval после реализации WebSocket
-setInterval(loadOrder, 10000);
+// setInterval(loadOrder, 10000);
 
 async function render() {
   el("route", `${order.departure_address} → ${order.destination_address}`);
