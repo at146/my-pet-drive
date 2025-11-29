@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL;
+
 const CONFIG = {
   COMMISSION_RATE: 0.21, // 21% комиссия
 };
@@ -34,7 +36,7 @@ async function init() {
   document.getElementById("order-code").textContent = orderCode;
 
   try {
-    const r = await fetch(`/api/orders/${orderCode}`);
+    const r = await fetch(`${API_URL}/api/orders/${orderCode}`);
     if (!r.ok) {
       alert("Заказ не найден");
       return;
@@ -160,7 +162,7 @@ async function geo(addr) {
 
 async function tryFillDriverFields() {
   try {
-    const r = await fetch("/api/orders");
+    const r = await fetch(`${API_URL}/api/orders`);
     const allData = await r.json();
     let lastDriverData = null;
 
@@ -254,7 +256,7 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
   resp.push(newResp);
 
   try {
-    await fetch(`/api/orders/${order.order_code}`, {
+    await fetch(`${API_URL}/api/orders/${order.order_code}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -285,7 +287,7 @@ async function sendNotif(resp) {
     `Сумма с комиссией: ${resp.cost_with_com}₽\n` +
     `<a href="${link}">Подтвердить предложение</a>`;
 
-  await fetch(`/api/telegram/notification/client`, {
+  await fetch(`${API_URL}/api/telegram/notification/client`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -309,7 +311,7 @@ async function sendNotif(resp) {
     `— Эквайринг 10,5%: ${adminPaying}₽\n` +
     `— Факт. доход 10,5%: ${adminFactProfit}₽`;
 
-  await fetch(`/api/telegram/notification/admin`, {
+  await fetch(`${API_URL}/api/telegram/notification/admin`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -318,7 +320,7 @@ async function sendNotif(resp) {
   });
   // ТГ драйвер-чат
   // Для чата водителей: стандартно
-  await fetch(`/api/telegram/notification/drivers-chat`, {
+  await fetch(`${API_URL}/api/telegram/notification/drivers-chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
