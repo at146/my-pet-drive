@@ -1,5 +1,8 @@
 # My Pet Drive
 
+Москва, ул. Ленина, 10
+Москва, ул. Пушкина, 5
+
 ## TODO
 
 Админу можно отправить любой текст - поправить sendConfirmNotif и sendCancelNotif в [route.js](./frontend/src/scripts/route.js)
