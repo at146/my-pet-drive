@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on:
       - self-hosted
-    #   - production
+      - production
     env:
     #   ENVIRONMENT: production
       DOMAIN: ${{ vars.DOMAIN_PRODUCTION }}
