@@ -1,4 +1,6 @@
 // Global state
+const API_URL = import.meta.env.VITE_API_URL;
+
 let userData = null;
 let map = null;
 const routeData = { departure: "", destination: "", distance: 0, coords: {} };
@@ -317,7 +319,7 @@ function updateTariffCosts() {
 // ====== ЗАМЕНИТЬ СТАРУЮ calculateCost() ЭТИМ КОДОМ ======
 async function calculateCost() {
   if (!selectedTariff) return;
-  const response = await fetch(`/api/orders/calculate-cost`, {
+  const response = await fetch(`${API_URL}/api/orders/calculate-cost`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -390,7 +392,7 @@ async function submitOrder() {
     };
     console.log("Sending order to backend:/api/orders", orderData);
     // Send to backend which will store in SheetDB and notify Telegram
-    const response = await fetch(`/api/orders`, {
+    const response = await fetch(`${API_URL}/api/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData),

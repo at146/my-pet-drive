@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL;
+
 const p = location.search.replace("?", "").split("-");
 if (p.length !== 2) {
   alert("Неверная ссылка");
@@ -11,7 +13,7 @@ let order = null,
 
 async function loadOrder() {
   try {
-    const r = await fetch(`/api/orders/${CODE}`);
+    const r = await fetch(`${API_URL}/api/orders/${CODE}`);
     if (!r.ok) {
       alert("Заказ не найден");
       return;
@@ -279,7 +281,7 @@ function cancelLogicUI() {
       status: "ОТМЕНА",
       cancel_wtf: `${reason}; ${new Date().toLocaleString("ru-RU")}`,
     };
-    await fetch(`/api/orders/${CODE}`, {
+    await fetch(`${API_URL}/api/orders/${CODE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -292,7 +294,7 @@ function cancelLogicUI() {
 async function sendCancelNotif(cause) {
   try {
     // ТГ клиенту
-    await fetch(`/api/telegram/notification/client`, {
+    await fetch(`${API_URL}/api/telegram/notification/client`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -301,7 +303,7 @@ async function sendCancelNotif(cause) {
       }),
     });
     // ТГ админу
-    await fetch(`/api/telegram/notification/admin`, {
+    await fetch(`${API_URL}/api/telegram/notification/admin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -309,7 +311,7 @@ async function sendCancelNotif(cause) {
       }),
     });
     // ТГ драйвер-чат
-    await fetch(`/api/telegram/notification/drivers-chat`, {
+    await fetch(`${API_URL}/api/telegram/notification/drivers-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -327,7 +329,7 @@ async function confirmDriver(i) {
     drv = bids[i];
   try {
     // TODO: скорее всего надо добавить столбцы в БД для этих полей
-    await fetch(`/api/orders/${CODE}`, {
+    await fetch(`${API_URL}/api/orders/${CODE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -357,7 +359,7 @@ async function confirmDriver(i) {
 async function sendConfirmNotif(drv) {
   try {
     // ТГ водителю
-    await fetch(`/api/telegram/notification/client`, {
+    await fetch(`${API_URL}/api/telegram/notification/client`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -366,7 +368,7 @@ async function sendConfirmNotif(drv) {
       }),
     });
     // ТГ админу
-    await fetch(`/api/telegram/notification/admin`, {
+    await fetch(`${API_URL}/api/telegram/notification/admin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -374,7 +376,7 @@ async function sendConfirmNotif(drv) {
       }),
     });
     // ТГ драйвер-чат
-    await fetch(`/api/telegram/notification/drivers-chat`, {
+    await fetch(`${API_URL}/api/telegram/notification/drivers-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -392,7 +394,7 @@ async function createPayment() {
     alert("Ставка водителя не указана");
     return;
   }
-  const response = await fetch("/api/payment/payment-link", {
+  const response = await fetch(`${API_URL}/api/payment/payment-link`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sum: sum, orderId: CODE }),
@@ -400,7 +402,7 @@ async function createPayment() {
 
   const data = await response.json();
 
-  await fetch(`/api/orders/${CODE}`, {
+  await fetch(`${API_URL}/api/orders/${CODE}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ payment_url: data.url }),
