@@ -1,0 +1,32 @@
+name: Deploy to Production
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  deploy:
+    runs-on:
+      - self-hosted
+    #   - production
+    env:
+    #   ENVIRONMENT: production
+      DOMAIN: ${{ vars.DOMAIN_PRODUCTION }}
+      STACK_NAME: ${{ vars.STACK_NAME_PRODUCTION }}
+      VITE_TELEGRAM_BOT_LOGIN: ${{ secrets.VITE_TELEGRAM_BOT_LOGIN_PRODUCTION }}
+      SHEETDB_URL: ${{ secrets.SHEETDB_URL_PRODUCTION }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN_PRODUCTION }}
+      ADMIN_CHAT: ${{ secrets.ADMIN_CHAT_PRODUCTION }}
+      DRIVERS_CHAT: ${{ secrets.DRIVERS_CHAT_PRODUCTION }}
+      MERCHANT: ${{ secrets.MERCHANT_PRODUCTION }}
+      PASS1: ${{ secrets.PASS1_PRODUCTION }}
+      DOCKER_IMAGE_BACKEND: ${{ vars.DOCKER_IMAGE_BACKEND_PRODUCTION }}
+      DOCKER_IMAGE_FRONTEND: ${{ vars.DOCKER_IMAGE_FRONTEND_PRODUCTION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - run: docker compose --project-name ${{ vars.STACK_NAME_PRODUCTION }} build
+      # - run: docker compose -f docker-compose.yml --project-name ${{ vars.STACK_NAME_PRODUCTION }} build
+      - run: docker compose --project-name ${{ vars.STACK_NAME_PRODUCTION }} up -d
+      # - run: docker compose -f docker-compose.yml --project-name ${{ vars.STACK_NAME_PRODUCTION }} up -d
