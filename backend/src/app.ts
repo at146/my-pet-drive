@@ -10,9 +10,12 @@ import paymentRouter from "./routes/payment";
 import telegramRouter from "./routes/telegram";
 import utilsRouter from "./routes/utils";
 
+const allCorsOrigins = process.env.BACKEND_CORS_ORIGINS
+  ? process.env.BACKEND_CORS_ORIGINS.split(",").map((o) => o.trim())
+  : [];
+
 const app = express();
-const corsMiddleware = cors();
-app.use(corsMiddleware);
+app.use(cors({ origin: allCorsOrigins }));
 
 const jsonMiddleware = express.json();
 app.use(jsonMiddleware);
