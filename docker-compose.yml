@@ -8,6 +8,7 @@ services:
       - traefik-public
       - default
     environment:
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS?Variable not set}
       - SHEETDB_URL=${SHEETDB_URL?Variable not set}
       - BOT_TOKEN=${BOT_TOKEN?Variable not set}
       - DRIVERS_CHAT=${DRIVERS_CHAT?Variable not set}
