@@ -18,7 +18,7 @@ export HASHED_PASSWORD=$(openssl passwd -apr1 $PASSWORD)
 
 echo $HASHED_PASSWORD
 
-export DOMAIN=my-domain.com
+export DOMAIN=mypetdrive.ru
 
 export EMAIL=
 
