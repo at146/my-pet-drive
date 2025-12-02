@@ -31,7 +31,7 @@ export async function notifyAll(order: any, rowNumber: number | null) {
     const clientLink = `/route?${rowNumber}-${order.order_code}`;
     await sendMessage(
       order.telegram_id,
-      `Ваш заказ №${order.order_code} принят!\n\nМаршрут: ${order.departure_address} → ${order.destination_address}\nРасстояние: ${order.distance_km} км\nДата: ${order.trip_date} в ${order.trip_time}\n\nОжидайте откликов водителей в течение 15 минут.\n\nСсылка на ваш заказ: https://мояпередержка.рф${clientLink}`,
+      `Ваш заказ №${order.order_code} принят!\n\nМаршрут: ${order.departure_address} → ${order.destination_address}\nРасстояние: ${order.distance_km} км\nДата: ${order.trip_date} в ${order.trip_time}\n\nОжидайте откликов водителей в течение 15 минут.\n\nСсылка на ваш заказ: https://mypetdrive.ru${clientLink}`,
     );
     console.log("✓ Notification sent to client");
 
