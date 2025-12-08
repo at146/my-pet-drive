@@ -276,6 +276,7 @@ document.getElementById("bid-form").addEventListener("submit", async (e) => {
 });
 
 async function sendNotif(resp) {
+  const rowNumber = 1;
   const link = `https://xn--80ahcabg2akskmd2q.xn--p1ai/route?${rowNumber}-${order.order_code}`;
   // ТГ клиенту
   // Для клиента: первое имя водителя, марка авто, комментарий и стоимость с комиссией 21%
