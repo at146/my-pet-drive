@@ -52,6 +52,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=false
 
   frontend:
+    image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
     restart: "no"
     ports:
       - "80:80"
