@@ -240,7 +240,8 @@
     </div>
     <!-- /container -->
     <script>
-      const API_URL = import.meta.env.VITE_API_URL;
+      const API_URL = "http://localhost:3000";
+      const botLogin = "isalex1_test_dev_bot";
 
       const CONFIG = {
         COMMISSION_RATE: 0.21, // 21% комиссия
@@ -251,7 +252,6 @@
       let map,
         markers = [];
 
-      const botLogin = import.meta.env.VITE_TELEGRAM_BOT_LOGIN;
       const script = document.createElement("script");
       script.src = "https://telegram.org/js/telegram-widget.js?22";
       script.async = true;
