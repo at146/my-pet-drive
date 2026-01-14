@@ -15,7 +15,7 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.8",
+    "@biomejs/biome": "2.3.11",
     "@types/cors": "^2.8.19",
     "@types/crypto-js": "^4.2.2",
     "@types/express": "^5.0.6",
