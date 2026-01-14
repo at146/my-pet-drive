@@ -27,9 +27,8 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
       - uses: actions/checkout@v6
-        # with:
-        #   # To allow latest-changes to commit to the main branch
-        #   token: ${{ secrets.LATEST_CHANGES }}
+        with:
+          token: ${{ secrets.ACTIONS_TOKEN }}
       - uses: tiangolo/latest-changes@0.4.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
