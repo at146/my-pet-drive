@@ -1,7 +1,7 @@
 # My Pet Drive
 
-Москва, ул. Ленина, 10  
-Москва, ул. Пушкина, 5  
+Москва, ул. Ленина, 10
+Москва, ул. Пушкина, 5
 
 ## TODO
 
@@ -26,3 +26,5 @@ docker network create traefik-public
 
 docker compose -f docker-compose.traefik.yml up -d
 ```
+
+<https://doc.traefik.io/traefik/reference/install-configuration/api-dashboard/>
