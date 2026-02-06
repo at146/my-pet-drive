@@ -46,8 +46,6 @@ services:
     restart: "no"
     ports:
       - "3000:3000"
-    build:
-      context: ./backend
     labels:
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.tls=false
 
@@ -57,7 +55,8 @@ services:
     ports:
       - "80:80"
     build:
-      context: ./frontend
+      context: .
+      dockerfile: ./frontend/Dockerfile
     labels:
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-https.tls=false
 

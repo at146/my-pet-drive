@@ -5,9 +5,13 @@ WORKDIR /app
 
 COPY package*.json /app/
 
+COPY frontend/package.json /app/frontend/
+
+WORKDIR /app/frontend
+
 RUN npm ci
 
-COPY . /app/
+COPY ./frontend /app/frontend/
 
 ARG VITE_API_URL=${VITE_API_URL}
 ARG VITE_TELEGRAM_BOT_LOGIN=${VITE_TELEGRAM_BOT_LOGIN}
@@ -19,6 +23,6 @@ FROM nginx:1 AS runner
 
 RUN rm -rf /usr/share/nginx/html/index.html
 
-COPY --from=builder /app/dist/ /usr/share/nginx/html
+COPY --from=builder /app/frontend/dist/ /usr/share/nginx/html
 
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./frontend/nginx.conf /etc/nginx/conf.d/default.conf

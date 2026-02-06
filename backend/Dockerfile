@@ -5,25 +5,28 @@ WORKDIR /app
 
 COPY package*.json /app/
 
+COPY backend/package.json /app/backend/
+
+WORKDIR /app/backend
+
 RUN npm ci
 
-COPY . /app/
+COPY ./backend /app/backend/
+
 RUN npm run build
+RUN npm prune --omit=dev
 
 # ---------- Runner ----------
 FROM node:24.8-bookworm-slim AS runner
 
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN npm ci --omit=dev
-
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./backend/node_modules
+COPY --from=builder /app/backend/dist ./backend/dist
 
 ENV PORT=3000
 EXPOSE 3000
 
 USER node
 
-CMD ["node", "dist/app.js"]
+CMD ["node", "backend/dist/app.js"]
