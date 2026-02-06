@@ -7,7 +7,6 @@
     "backend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces",
     "dev:backend": "npm run dev --workspace backend",
