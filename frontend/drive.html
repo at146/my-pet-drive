@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MyPetDrive - Зоотакси в Москве</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Montserrat", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      h1,
+      h2 {
+        color: #333;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 32px;
+      }
+
+      /* Progress Bar */
+      .progress-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 40px;
+        padding: 20px 0;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .progress-step {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #999;
+        background: #f5f5f5;
+        margin: 0 5px;
+        transition: all 0.3s;
+      }
+      .progress-step.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        transform: scale(1.05);
+      }
+      .progress-step.completed {
+        background: #4caf50;
+        color: white;
+      }
+      /* Steps */
+      .step {
+        display: none;
+      }
+      .step.active {
+        display: block;
+        animation: fadeIn 0.3s;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* Form Elements */
+      .form-group {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+      }
+      .required-label::after {
+        content: " *";
+        color: #dc3545;
+        font-weight: 700;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Montserrat", sans-serif;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+      /* Buttons */
+      button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn-secondary {
+        background: #6c757d;
+        margin-top: 10px;
+      }
+      .btn-back {
+        background: #fff;
+        color: #333;
+        border: 2px solid #e0e0e0;
+      }
+      /* Navigation */
+      .step-nav {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        margin-top: 30px;
+      }
+      .step-nav button {
+        flex: 1;
+      }
+      /* Map */
+      #map {
+        height: 300px;
+        border-radius: 10px;
+        margin: 15px 0;
+        border: 2px solid #e0e0e0;
+      }
+      /* Result boxes */
+      .result {
+        background: #e7f3ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border-left: 4px solid #667eea;
+      }
+      .result.success {
+        background: #e7ffe7;
+        border-left-color: #4caf50;
+      }
+      .result.warning {
+        background: #fff3cd;
+        border-left-color: #ffc107;
+        color: #856404;
+      }
+      /* Tariff Cards */
+      .tariff-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .tariff-card {
+        padding: 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+      }
+      .tariff-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+      }
+      .tariff-card.selected {
+        border-color: #667eea;
+        background: #f0f4ff;
+        border-width: 3px;
+      }
+      .tariff-card.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #f5f5f5;
+      }
+      .tariff-card.disabled:hover {
+        border-color: #e0e0e0;
+        box-shadow: none;
+      }
+      .tariff-card h3 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+      .tariff-card p {
+        margin: 5px 0;
+      }
+      .hidden {
+        display: none !important;
+      }
+      /* Checkbox styles */
+      .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+        margin: 20px 0;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 8px;
+      }
+      .checkbox-group input[type="checkbox"] {
+        width: auto;
+        margin-right: 10px;
+        margin-top: 3px;
+        cursor: pointer;
+      }
+      .checkbox-group label {
+        margin: 0;
+        font-size: 14px;
+        cursor: pointer;
+        flex: 1;
+      }
+      /* Disclaimer */
+      .disclaimer {
+        margin-top: 30px;
+        padding: 15px;
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #856404;
+        line-height: 1.6;
+      }
+      /* Comment suggestions */
+      .comment-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .suggestion-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+        background: #f0f4ff;
+        color: #667eea;
+        border: 1px solid #667eea;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .suggestion-btn:hover {
+        background: #667eea;
+        color: white;
+        transform: none;
+      }
+      /* Responsive */
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+        }
+        h1 {
+          font-size: 24px;
+        }
+        .progress-bar {
+          flex-wrap: wrap;
+        }
+        .progress-step {
+          font-size: 12px;
+          padding: 8px;
+          margin: 2px;
+        }
+        .tariff-cards {
+          grid-template-columns: 1fr;
+        }
+      }
+      /* прячем только ссылку Leaflet */
+      .leaflet-control-attribution a[href*="leafletjs.com"] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Зоотакси MyPetDrive</h1>
+      <!-- Telegram Auth Section -->
+      <div id="telegram-auth-section">
+        <h2>Авторизация через Telegram</h2>
+        <p style="margin: 15px 0">Войдите через Telegram для создания заказа</p>
+        <div id="telegram-login-container" style="margin: 20px 0"></div>
+      </div>
+      <!-- Main Order Form (hidden until auth) -->
+      <div id="order-form" class="hidden">
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+          <div class="progress-step active" data-step="1">1. Маршрут</div>
+          <div class="progress-step" data-step="2">2. Питомец</div>
+          <div class="progress-step" data-step="3">3. Тариф</div>
+          <div class="progress-step" data-step="4">4. Проверка</div>
+          <div class="progress-step" data-step="5">Готово</div>
+        </div>
+        <!-- Step 1: Route -->
+        <div class="step active" id="step-1">
+          <h2>Шаг 1: Планирование маршрута</h2>
+          <div class="form-group">
+            <label>Откуда:</label>
+            <input
+              type="text"
+              id="departure"
+              placeholder="Москва, ул. Ленина, 10"
+            />
+            <button class="btn-secondary" onclick="getCurrentLocation()">
+              Определить моё местоположение
+            </button>
+          </div>
+          <div class="form-group">
+            <label>Куда:</label>
+            <input
+              type="text"
+              id="destination"
+              placeholder="Москва, ул. Пушкина, 5"
+            />
+          </div>
+          <button onclick="calculateRoute()" id="calc-route-btn">
+            Рассчитать маршрут
+          </button>
+          <div id="map" class="hidden"></div>
+          <div id="route-result" class="hidden result">
+            <strong>Расстояние:</strong> <span id="distance">0</span> км
+          </div>
+          <div class="step-nav">
+            <button onclick="goToStep(2)" id="next-to-step-2" disabled>
+              Далее: Информация о питомце →
+            </button>
+          </div>
+        </div>
+        <!-- Step 2: Pet Info -->
+        <div class="step" id="step-2">
+          <h2>Шаг 2: Информация о питомце</h2>
+          <div class="form-group">
+            <label class="required-label">Вид животного</label>
+            <select id="animal-type">
+              <option value="">Выберите вид</option>
+              <option value="Собака">Собака</option>
+              <option value="Кошка">Кошка</option>
+              <option value="Другой">Другое</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Порода (опционально):</label>
+            <input type="text" id="breed" placeholder="Лабрадор" />
+          </div>
+          <div class="form-group">
+            <label class="required-label">Вес (кг)</label>
+            <input
+              type="number"
+              id="weight"
+              min="0"
+              step="0.5"
+              placeholder="15"
+            />
+          </div>
+          <div class="form-group">
+            <label class="required-label">Дата поездки</label>
+            <input type="date" id="trip-date" />
+          </div>
+          <div class="form-group">
+            <label>Время:</label>
+            <input type="time" id="trip-time" />
+          </div>
+          <div class="form-group">
+            <label class="required-label">Телефон</label>
+            <input type="tel" id="phone" placeholder="+7 (_) _--" />
+          </div>
+          <div class="step-nav">
+            <button class="btn-back" onclick="goToStep(1)">← Назад</button>
+            <button onclick="goToStep(3)" id="next-to-step-3" disabled>
+              Далее: Выбор тарифа →
+            </button>
+          </div>
+        </div>
+        <!-- Step 3: Tariff -->
+        <div class="step" id="step-3">
+          <h2>Шаг 3: Выбор тарифа</h2>
+          <p><strong>Расстояние:</strong> <span id="distance-3">0</span> км</p>
+          <div class="tariff-cards">
+            <div
+              class="tariff-card"
+              onclick="selectTariff('eco')"
+              data-tariff="eco"
+              id="tariff-eco"
+            >
+              <h3>ЭкоDelivery</h3>
+              <p><strong>75₽/км</strong></p>
+              <p>Выезд: 3-14 дней</p>
+              <p style="margin-top: 10px; font-size: 18px; font-weight: 600">
+                Средняя стоимость: <span class="eco-cost">0</span>₽
+              </p>
+            </div>
+            <div
+              class="tariff-card"
+              onclick="selectTariff('opti')"
+              data-tariff="opti"
+              id="tariff-opti"
+            >
+              <h3>ОптиDelivery</h3>
+              <p><strong>105₽/км</strong></p>
+              <p>Выезд: в течение 1-2 дней</p>
+              <p style="margin-top: 10px; font-size: 18px; font-weight: 600">
+                Средняя стоимость: <span class="opti-cost">0</span>₽
+              </p>
+            </div>
+            <div
+              class="tariff-card"
+              onclick="selectTariff('maxi')"
+              data-tariff="maxi"
+              id="tariff-maxi"
+            >
+              <h3>МаксиDelivery</h3>
+              <p><strong>150₽/км</strong></p>
+              <p>Выезд: 30 мин-8 часов</p>
+              <p style="margin-top: 10px; font-size: 18px; font-weight: 600">
+                Средняя стоимость: <span class="maxi-cost">0</span>₽
+              </p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Комментарий для водителя (опционально):</label>
+            <textarea
+              id="driver-comment"
+              rows="3"
+              placeholder="Укажите пожелания к поездке..."
+            ></textarea>
+            <div class="comment-suggestions">
+              <button
+                type="button"
+                class="suggestion-btn"
+                onclick="addCommentSuggestion('поездка с хозяином')"
+              >
+                поездка с хозяином
+              </button>
+              <button
+                type="button"
+                class="suggestion-btn"
+                onclick="addCommentSuggestion('доставка до квартиры')"
+              >
+                доставка до квартиры
+              </button>
+              <button
+                type="button"
+                class="suggestion-btn"
+                onclick="addCommentSuggestion('перенос вещей')"
+              >
+                перенос вещей
+              </button>
+              <button
+                type="button"
+                class="suggestion-btn"
+                onclick="addCommentSuggestion('большой кузов')"
+              >
+                большой кузов
+              </button>
+            </div>
+          </div>
+          <div id="cost-display" class="result">
+            <h3>Стоимость заказа</h3>
+            <div id="short-distance-notice" class="hidden">
+              <p style="color: #856404; font-weight: 600">
+                ⚠ Подача на короткое расстояние
+              </p>
+              <p>
+                Доплата за минимальную подачу:
+                <span id="short-distance-fee">0</span>₽
+              </p>
+            </div>
+            <p style="font-size: 18px">
+              <strong>Прогноз стоимости:</strong>
+              <span id="total-cost">0</span>₽
+            </p>
+            <p>Средняя стоимость: <span id="driver-cost">0</span>₽</p>
+          </div>
+          <div class="step-nav">
+            <button class="btn-back" onclick="goToStep(2)">← Назад</button>
+            <button onclick="goToStep(4)" id="next-to-step-4" disabled>
+              Далее: Подтверждение →
+            </button>
+          </div>
+        </div>
+        <!-- Step 4: Confirmation -->
+        <div class="step" id="step-4">
+          <h2>Шаг 4: Подтверждение заказа</h2>
+          <p style="margin-bottom: 20px">Проверьте данные перед отправкой</p>
+          <div class="result">
+            <p>
+              <strong>Маршрут:</strong><br /><span id="summary-route"></span>
+            </p>
+            <p style="margin-top: 10px">
+              <strong>Питомец:</strong><br /><span id="summary-pet"></span>
+            </p>
+            <p style="margin-top: 10px">
+              <strong>Дата и время:</strong><br /><span
+                id="summary-date"
+              ></span>
+            </p>
+            <p
+              style="margin-top: 10px"
+              id="summary-comment-block"
+              class="hidden"
+            >
+              <strong>Комментарий:</strong><br /><span
+                id="summary-comment"
+              ></span>
+            </p>
+            <p style="margin-top: 10px; font-size: 18px">
+              <strong>Прогнозируемая цена:</strong>
+              <span id="summary-cost"></span>₽
+            </p>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="consent-checkbox" />
+            <label for="consent-checkbox"
+              >Я даю согласие на обработку и публичное распространение моих
+              персональных данных</label
+            >
+          </div>
+          <div class="step-nav">
+            <button class="btn-back" onclick="goToStep(3)">← Назад</button>
+            <button onclick="submitOrder()" id="submit-btn" disabled>
+              Оформить заказ
+            </button>
+          </div>
+        </div>
+        <!-- Step 5: Success -->
+        <div class="step" id="step-5">
+          <h2 style="text-align: center; color: #4caf50">
+            ✓ Заказ успешно создан!
+          </h2>
+          <div class="result success">
+            <h3 style="text-align: center; font-size: 24px">
+              Номер заказа: <span id="order-code-display"></span>
+            </h3>
+            <p style="text-align: center; margin-top: 15px">
+              Уведомления отправлены в Telegram
+            </p>
+            <p style="text-align: center">
+              Ожидайте откликов водителей в течение 15 минут
+            </p>
+          </div>
+          <div
+            id="success-redirect"
+            style="text-align: center; margin-top: 20px"
+          >
+            <p>
+              Перенаправление на страницу заказа через
+              <span id="countdown">5</span> секунд...
+            </p>
+            <button
+              onclick="goToOrderPage()"
+              style="width: 100%; margin-top: 10px"
+            >
+              Перейти к заказу
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Disclaimer -->
+      <div class="disclaimer">
+        <strong>Внимание:</strong> Текущая версия сервиса работоспособна,
+        предназначена для коммерческого тестирования и демонстрации возможностей
+        IT-решения. Оператор обязан настроить собственный источник данных и
+        обеспечить защиту персональной информации в соответствии с 152-ФЗ.
+      </div>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      // Global state
+      // const API_URL = "http://localhost:3000";
+      const API_URL = "https://api.mypetdrive.ru";
+      // const botLogin = "isalex1_test_dev_bot";
+      const botLogin = "MoyaPerederjkaTaxi_bot";
+
+      let userData = null;
+      let map = null;
+      const routeData = { departure: "", destination: "", distance: 0, coords: {} };
+      let selectedTariff = null;
+      let markers = [];
+      let orderCodeGlobal = "";
+      let rowNumberGlobal = "";
+      let userIP = "";
+
+      const script = document.createElement("script");
+      script.src = "https://telegram.org/js/telegram-widget.js?22";
+      script.async = true;
+      script.setAttribute("data-telegram-login", botLogin);
+      script.setAttribute("data-size", "large");
+      script.setAttribute("data-onauth", "handleTelegramAuth(user)");
+      script.setAttribute("data-request-access", "write");
+      document.getElementById("telegram-login-container").appendChild(script);
+
+      // Get user IP
+      async function getUserIP() {
+        try {
+          const response = await fetch("https://api.ipify.org?format=json");
+          const data = await response.json();
+          userIP = data.ip;
+        } catch (error) {
+          console.error("IP detection error:", error);
+          userIP = "unknown";
+        }
+      }
+      getUserIP();
+      // Phone mask handler
+      function applyPhoneMask(input) {
+        let value = input.value.replace(/\D/g, "");
+        if (value.length > 0 && value[0] !== "7") {
+          value = `7${value}`;
+        }
+        let formatted = "+7";
+        if (value.length > 1) {
+          formatted += ` (${value.substring(1, 4)}`;
+        }
+        if (value.length >= 5) {
+          formatted += `) ${value.substring(4, 7)}`;
+        }
+        if (value.length >= 8) {
+          formatted += `-${value.substring(7, 9)}`;
+        }
+        if (value.length >= 10) {
+          formatted += `-${value.substring(9, 11)}`;
+        }
+        input.value = formatted;
+      }
+      // Add comment suggestion
+      function addCommentSuggestion(text) {
+        const commentField = document.getElementById("driver-comment");
+        if (commentField.value) {
+          commentField.value += `; ${text}`;
+        } else {
+          commentField.value = text;
+        }
+      }
+      // Check Step 2 required fields
+      function checkStep2Required() {
+        const animalType = document.getElementById("animal-type").value;
+        const weight = document.getElementById("weight").value;
+        const tripDate = document.getElementById("trip-date").value;
+        const phone = document.getElementById("phone").value;
+        const allFilled = animalType && weight && tripDate && phone.length >= 10;
+        document.getElementById("next-to-step-3").disabled = !allFilled;
+      }
+      // ====== ЗАМЕНИТЬ СТАРУЮ checkTariffAvailability() ЭТИМ КОДОМ ======
+      function checkTariffAvailability() {
+        const tripDateVal = document.getElementById("trip-date").value;
+        if (!tripDateVal) return;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tripDate = new Date(tripDateVal);
+        tripDate.setHours(0, 0, 0, 0);
+        // сутки в мс
+        const ONE_DAY = 86_400_000;
+        const diffDays = Math.round((tripDate - today) / ONE_DAY);
+        const eco = document.getElementById("tariff-eco");
+        const opti = document.getElementById("tariff-opti");
+        const maxi = document.getElementById("tariff-maxi");
+        // утилити-функция для включения / выключения карточки
+        const setCard = (card, enable, msg) => {
+          if (enable) {
+            card.classList.remove("disabled");
+            card.onclick = () => selectTariff(card.dataset.tariff);
+          } else {
+            card.classList.add("disabled");
+            card.onclick = () => alert(msg);
+          }
+        };
+        if (diffDays === 0) {
+          // поездка СЕГОДНЯ
+          setCard(eco, false, "Эко доступен при выезде через 2 дня и позже");
+          setCard(opti, true);
+          setCard(maxi, true);
+        } else if (diffDays === 1) {
+          // поездка ЗАВТРА
+          setCard(eco, false, "Эко доступен при выезде через 2 дня и позже");
+          setCard(opti, true);
+          setCard(maxi, false, "Макси доступен только при выезде сегодня");
+        } else {
+          // поездка ≥ 2 дней
+          setCard(eco, true);
+          setCard(opti, false, "Опти доступен при выезде сегодня или завтра");
+          setCard(maxi, false, "Макси доступен только при выезде сегодня");
+        }
+      }
+      // Telegram Auth Handler
+      function handleTelegramAuth(user) {
+        console.log("✓ Telegram auth:", user);
+        userData = user;
+        // HIDE Telegram auth section completely
+        document.getElementById("telegram-auth-section").style.display = "none";
+        // Show order form
+        document.getElementById("order-form").classList.remove("hidden");
+        // Set min date to today
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("trip-date").value = today;
+        document.getElementById("trip-date").min = today;
+      }
+      // Navigation
+      async function goToStep(step) {
+        // Hide all steps
+        document
+          .querySelectorAll(".step")
+          .forEach((s) => s.classList.remove("active"));
+        // Show target step
+        document.getElementById(`step-${step}`).classList.add("active");
+        // Update progress bar
+        document.querySelectorAll(".progress-step").forEach((el, i) => {
+          el.classList.remove("active", "completed");
+          if (i + 1 < step) el.classList.add("completed");
+          if (i + 1 === step) el.classList.add("active");
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        // Update tariff costs if going to step 3
+        if (step === 3) {
+          updateTariffCosts();
+          document.getElementById("distance-3").textContent = routeData.distance;
+          checkTariffAvailability();
+        }
+        // Update summary if going to step 4
+        if (step === 4) {
+          await updateSummary();
+        }
+      }
+      // Get Current Location
+      function getCurrentLocation() {
+        if (!navigator.geolocation) {
+          alert("Геолокация не поддерживается вашим браузером");
+          return;
+        }
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = "⏳ Определение...";
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+              );
+              const data = await response.json();
+              document.getElementById("departure").value = data.display_name;
+              routeData.coords.departure = [lat, lon];
+              console.log("✓ Location found:", data.display_name);
+            } catch (error) {
+              console.error("Geocoding error:", error);
+              alert("Ошибка определения адреса");
+            }
+            btn.disabled = false;
+            btn.textContent = "Определить моё местоположение";
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+            alert(
+              "Не удалось определить местоположение. Разрешите доступ к геолокации.",
+            );
+            btn.disabled = false;
+            btn.textContent = "Определить моё местоположение";
+          },
+        );
+      }
+      // Calculate Route
+      async function calculateRoute() {
+        const departure = document.getElementById("departure").value.trim();
+        const destination = document.getElementById("destination").value.trim();
+        if (!departure || !destination) {
+          alert("Заполните оба адреса");
+          return;
+        }
+        routeData.departure = departure;
+        routeData.destination = destination;
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = "⏳ Расчёт маршрута...";
+        try {
+          // Geocode departure if needed
+          if (!routeData.coords.departure) {
+            const depResp = await fetch(
+              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                departure,
+              )}&limit=1`,
+            );
+            const depData = await depResp.json();
+            if (!depData || depData.length === 0)
+              throw new Error("Адрес отправления не найден");
+            routeData.coords.departure = [
+              parseFloat(depData[0].lat),
+              parseFloat(depData[0].lon),
+            ];
+          }
+          // Geocode destination
+          const destResp = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              destination,
+            )}&limit=1`,
+          );
+          const destData = await destResp.json();
+          if (!destData || destData.length === 0)
+            throw new Error("Адрес назначения не найден");
+          routeData.coords.destination = [
+            parseFloat(destData[0].lat),
+            parseFloat(destData[0].lon),
+          ];
+          // Calculate distance (Haversine formula)
+          const R = 6371; // Earth radius in km
+          const lat1 = (routeData.coords.departure[0] * Math.PI) / 180;
+          const lat2 = (routeData.coords.destination[0] * Math.PI) / 180;
+          const dLat =
+            ((routeData.coords.destination[0] - routeData.coords.departure[0]) *
+              Math.PI) /
+            180;
+          const dLon =
+            ((routeData.coords.destination[1] - routeData.coords.departure[1]) *
+              Math.PI) /
+            180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          routeData.distance = Math.round(R * c);
+          console.log("✓ Distance calculated:", routeData.distance, "km");
+          // Show map
+          showMap();
+          // Show results
+          document.getElementById("distance").textContent = routeData.distance;
+          document.getElementById("route-result").classList.remove("hidden");
+          document.getElementById("next-to-step-2").disabled = false;
+        } catch (error) {
+          console.error("Route calculation error:", error);
+          alert(`Ошибка расчёта маршрута: ${error.message}`);
+        }
+        btn.disabled = false;
+        btn.textContent = "Рассчитать маршрут";
+      }
+      // Show Map
+      function showMap() {
+        const mapDiv = document.getElementById("map");
+        mapDiv.classList.remove("hidden");
+        if (!map) {
+          map = L.map("map");
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap",
+          }).addTo(map);
+        }
+        markers.forEach((m) => map.removeLayer(m));
+        markers = [];
+        const m1 = L.marker(routeData.coords.departure)
+          .addTo(map)
+          .bindPopup("Откуда");
+        const m2 = L.marker(routeData.coords.destination)
+          .addTo(map)
+          .bindPopup("Куда");
+        markers.push(m1, m2);
+        const line = L.polyline(
+          [routeData.coords.departure, routeData.coords.destination],
+          {
+            color: "#667eea",
+            weight: 3,
+          },
+        ).addTo(map);
+        markers.push(line);
+        map.fitBounds([routeData.coords.departure, routeData.coords.destination], {
+          padding: [50, 50],
+        });
+      }
+      // Select Tariff
+      async function selectTariff(tariff) {
+        // Check if tariff is disabled
+        const tariffCard = document.getElementById(`tariff-${tariff}`);
+        if (tariffCard.classList.contains("disabled")) {
+          return;
+        }
+        selectedTariff = tariff;
+        document
+          .querySelectorAll(".tariff-card")
+          .forEach((c) => c.classList.remove("selected"));
+        document.querySelector(`[data-tariff="${tariff}"]`).classList.add("selected");
+        document.getElementById("next-to-step-4").disabled = false;
+        await calculateCost();
+      }
+      // Update Tariff Costs
+      function updateTariffCosts() {
+        const prices = { eco: 75, opti: 105, maxi: 150 };
+        Object.entries(prices).forEach(([id, price]) => {
+          const cost = routeData.distance * price;
+          document.querySelector(`.${id}-cost`).textContent = cost;
+        });
+      }
+      // ====== ЗАМЕНИТЬ СТАРУЮ calculateCost() ЭТИМ КОДОМ ======
+      async function calculateCost() {
+        if (!selectedTariff) return;
+        const response = await fetch(`${API_URL}/api/orders/calculate-cost`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tariff: selectedTariff,
+            distance_km: routeData.distance,
+          }),
+        });
+        if (!response.ok) {
+          const txt = await response.text();
+          throw new Error(`Backend error: ${response.status} ${txt}`);
+        }
+        const respData = await response.json();
+
+        const totalCost = respData.totalCost;
+        const driverCost = respData.driverCost;
+        const shortDistanceFee = respData.shortDistanceFee;
+
+        if (respData.baseCost < 800) {
+          document.getElementById("short-distance-notice").classList.remove("hidden");
+          document.getElementById("short-distance-fee").textContent =
+            respData.shortDistanceFee;
+        } else {
+          document.getElementById("short-distance-notice").classList.add("hidden");
+        }
+        document.getElementById("total-cost").textContent = respData.totalCost;
+        document.getElementById("driver-cost").textContent = respData.driverCost;
+        return { totalCost, driverCost, shortDistanceFee };
+      }
+      // Update Summary
+      async function updateSummary() {
+        const costs = await calculateCost();
+        document.getElementById("summary-route").textContent =
+          `${routeData.departure} → ${routeData.destination} (${routeData.distance} км)`;
+        document.getElementById("summary-pet").textContent = `${
+          document.getElementById("animal-type").value
+        },
+      ${document.getElementById("weight").value || 0}кг`;
+        document.getElementById("summary-date").textContent = `${
+          document.getElementById("trip-date").value
+        } в
+      ${document.getElementById("trip-time").value}`;
+        // Show comment if exists
+        const comment = document.getElementById("driver-comment").value;
+        if (comment) {
+          document.getElementById("summary-comment").textContent = comment;
+          document.getElementById("summary-comment-block").classList.remove("hidden");
+        } else {
+          document.getElementById("summary-comment-block").classList.add("hidden");
+        }
+        document.getElementById("summary-cost").textContent = costs.totalCost;
+      }
+      // Submit Order
+      async function submitOrder() {
+        const btn = document.getElementById("submit-btn");
+        btn.disabled = true;
+        btn.textContent = "⏳ Отправка заказа...";
+        try {
+          const orderData = {
+            client_phone: document.getElementById("phone").value,
+            animal_type: document.getElementById("animal-type").value,
+            breed: document.getElementById("breed").value || "",
+            weight_kg: parseFloat(document.getElementById("weight").value) || 0,
+            trip_date: document.getElementById("trip-date").value,
+            trip_time: document.getElementById("trip-time").value,
+            tariff: selectedTariff,
+            mssg_cl: document.getElementById("driver-comment").value || "",
+            userIP: userIP,
+            userData: JSON.stringify(userData),
+            routeData: JSON.stringify(routeData),
+          };
+          console.log("Sending order to backend:/api/orders", orderData);
+          // Send to backend which will store in SheetDB and notify Telegram
+          const response = await fetch(`${API_URL}/api/orders`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderData),
+          });
+          if (!response.ok) {
+            const txt = await response.text();
+            throw new Error(`Backend error: ${response.status} ${txt}`);
+          }
+          const respData = await response.json();
+          const rowNumber = respData.row_number || 1;
+          rowNumberGlobal = rowNumber;
+          orderCodeGlobal = respData.order_code;
+          console.log("✓ Order created via backend:", respData);
+          // Show success
+          document.getElementById("order-code-display").textContent =
+            respData.order_code;
+          await goToStep(5);
+          // Start countdown for redirect
+          startRedirectCountdown();
+        } catch (error) {
+          console.error("Submit error:", error);
+          alert(`Ошибка создания заказа: ${error.message}`);
+          btn.disabled = false;
+          btn.textContent = "Оформить заказ";
+        }
+      }
+      // Start redirect countdown
+      function startRedirectCountdown() {
+        let seconds = 5;
+        const countdownElement = document.getElementById("countdown");
+        const interval = setInterval(() => {
+          seconds--;
+          countdownElement.textContent = seconds;
+          if (seconds <= 0) {
+            clearInterval(interval);
+            goToOrderPage();
+          }
+        }, 1000);
+      }
+      // Go to order page
+      function goToOrderPage() {
+        if (orderCodeGlobal && rowNumberGlobal) {
+          window.location.href = `/route?${rowNumberGlobal}-${orderCodeGlobal}`;
+        }
+      }
+      // Event listeners
+      document.addEventListener("DOMContentLoaded", () => {
+        // Auto-calculate cost on weight change
+        document.getElementById("weight").addEventListener("input", () => {
+          if (selectedTariff) calculateCost();
+        });
+        // Phone mask
+        const phoneInput = document.getElementById("phone");
+        phoneInput.addEventListener("input", function () {
+          applyPhoneMask(this);
+        });
+        // Enable/disable buttons based on input
+        const departureInput = document.getElementById("departure");
+        const destinationInput = document.getElementById("destination");
+        const calcBtn = document.getElementById("calc-route-btn");
+        function checkRouteInputs() {
+          const departure = departureInput.value.trim();
+          const destination = destinationInput.value.trim();
+          calcBtn.disabled = !(departure && destination);
+        }
+        departureInput.addEventListener("input", checkRouteInputs);
+        destinationInput.addEventListener("input", checkRouteInputs);
+        // Consent checkbox
+        const consentCheckbox = document.getElementById("consent-checkbox");
+        const submitBtn = document.getElementById("submit-btn");
+        consentCheckbox.addEventListener("change", function () {
+          submitBtn.disabled = !this.checked;
+        });
+        // Step 2 required fields validation
+        document
+          .getElementById("animal-type")
+          .addEventListener("change", checkStep2Required);
+        document
+          .getElementById("weight")
+          .addEventListener("input", checkStep2Required);
+        document.getElementById("trip-date").addEventListener("change", () => {
+          checkStep2Required();
+          checkTariffAvailability();
+        });
+        phoneInput.addEventListener("input", checkStep2Required);
+      });
+
+      // Expose functions to global scope for inline handlers and Telegram widget
+      window.handleTelegramAuth = handleTelegramAuth;
+      window.getCurrentLocation = getCurrentLocation;
+      window.calculateRoute = calculateRoute;
+      window.goToStep = goToStep;
+      window.selectTariff = selectTariff;
+      window.addCommentSuggestion = addCommentSuggestion;
+      window.submitOrder = submitOrder;
+      window.goToOrderPage = goToOrderPage;
+    </script>
+  </body>
+</html>
