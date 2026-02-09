@@ -1,5 +1,5 @@
 # ---------- Builder ----------
-FROM node:24.8-bookworm-slim AS builder
+FROM node:25.6-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # ---------- Runner ----------
-FROM node:24.8-bookworm-slim AS runner
+FROM node:25.6-bookworm-slim AS runner
 
 WORKDIR /app
 
